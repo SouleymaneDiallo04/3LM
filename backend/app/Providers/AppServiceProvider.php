@@ -14,7 +14,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // §5.3 : implémentations substituables — BAN en source primaire,
+        // Nominatim auto-hébergé en repli (bascule par configuration).
+        $this->app->bind(
+            \App\Services\Geocoding\Contracts\Geocoder::class,
+            \App\Services\Geocoding\BanGeocoder::class,
+        );
     }
 
     /**

@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    // Géocodeur officiel français — Base Adresse Nationale (correctif 5).
+    // min_score : seuil d'appariement sous lequel le résultat est écarté
+    // (la fiche reste candidate au repli Nominatim).
+    'ban' => [
+        'url' => env('BAN_URL', 'https://api-adresse.data.gouv.fr'),
+        'min_score' => env('BAN_MIN_SCORE', 0.5),
+        'batch_size' => env('BAN_BATCH_SIZE', 1000),
+    ],
+
 ];
