@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -66,7 +67,7 @@ class AuthController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function userPayload(\App\Models\User $user): array
+    private function userPayload(User $user): array
     {
         return [
             'id' => $user->id,

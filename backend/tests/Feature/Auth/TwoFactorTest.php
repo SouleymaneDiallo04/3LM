@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Services\Auth\TwoFactorService;
 use Database\Seeders\RoleSeeder;
+use Illuminate\Support\Facades\DB;
 use PragmaRX\Google2FA\Google2FA;
 
 beforeEach(function (): void {
@@ -143,7 +144,7 @@ it('exige le mot de passe courant pour désactiver la 2FA', function (): void {
 it('chiffre le secret TOTP en base (§8)', function (): void {
     activateTwoFactor($this->user);
 
-    $raw = \Illuminate\Support\Facades\DB::table('users')
+    $raw = DB::table('users')
         ->where('id', $this->user->id)
         ->value('two_factor_secret');
 

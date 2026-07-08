@@ -1,0 +1,97 @@
+# CI (§5.2, §10 du CDC) : style de code imposé et tests exécutés à chaque
+# push et pull request. Les tests backend tournent sur PostgreSQL + PostGIS,
+# le moteur de production.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend — Pint + Pest (PostgreSQL)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_DB: fbde_test
+          POSTGRES_USER: fbde
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fbde"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, pgsql, bcmath, intl, zip, redis
+          coverage: none
+
+      - name: Installer les dépendances Composer
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Style de code (Pint — PSR-12)
+        run: ./vendor/bin/pint --test
+
+      - name: Audit de sécurité des dépendances
+        run: composer audit
+
+      - name: Préparer l'environnement de test
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Tests (Pest)
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: fbde_test
+          DB_USERNAME: fbde
+          DB_PASSWORD: secret
+          REDIS_HOST: 127.0.0.1
+        run: ./vendor/bin/pest
+
+  frontend:
+    name: Frontend — lint + build TypeScript
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Lint (oxlint)
+        run: npm run lint
+
+      - name: Build (tsc + vite)
+        run: npm run build

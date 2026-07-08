@@ -17,9 +17,7 @@ use Illuminate\Validation\ValidationException;
  */
 class TwoFactorController extends Controller
 {
-    public function __construct(private readonly TwoFactorService $twoFactor)
-    {
-    }
+    public function __construct(private readonly TwoFactorService $twoFactor) {}
 
     /** Échange le token de défi contre un token API complet. */
     public function verify(Request $request): JsonResponse

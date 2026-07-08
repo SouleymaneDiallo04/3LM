@@ -17,9 +17,7 @@ class TwoFactorService
 {
     private const RECOVERY_CODE_COUNT = 8;
 
-    public function __construct(private readonly Google2FA $engine)
-    {
-    }
+    public function __construct(private readonly Google2FA $engine) {}
 
     /**
      * Génère un secret TOTP (non confirmé) et l'URI de provisionnement
