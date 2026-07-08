@@ -14,13 +14,32 @@ use Illuminate\Support\Facades\Auth;
  */
 class AuthController extends Controller
 {
-    /** Connexion : renvoie l'utilisateur, ses rôles et un token API. */
+    /**
+     * Connexion : renvoie l'utilisateur, ses rôles et un token API.
+     * Si la 2FA est active, renvoie un token de défi à échanger
+     * contre un token complet via POST /auth/2fa.
+     */
     public function login(LoginRequest $request): JsonResponse
     {
         $request->authenticate();
 
         /** @var \App\Models\User $user */
         $user = Auth::user();
+
+        if ($user->hasTwoFactorEnabled()) {
+            $challenge = $user->createToken(
+                '2fa-challenge',
+                ['2fa:challenge'],
+                now()->addMinutes(5),
+            )->plainTextToken;
+
+            return response()->json([
+                'data' => [
+                    'two_factor_required' => true,
+                    'challenge_token' => $challenge,
+                ],
+            ]);
+        }
 
         $token = $user->createToken('api')->plainTextToken;
 
