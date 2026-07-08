@@ -11,15 +11,26 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed the application's database.
+     * Référentiels et comptes initiaux.
+     *
+     * Le compte administrateur initial est créé à partir des variables
+     * d'environnement FBDE_ADMIN_EMAIL / FBDE_ADMIN_PASSWORD — jamais
+     * d'identifiants en dur dans le code (§8 Secrets).
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->call(RoleSeeder::class);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        $email = env('FBDE_ADMIN_EMAIL');
+        $password = env('FBDE_ADMIN_PASSWORD');
+
+        if ($email && $password) {
+            User::query()
+                ->firstOrCreate(['email' => $email], [
+                    'name' => 'Administrateur',
+                    'password' => $password,
+                ])
+                ->syncRoles('administrateur');
+        }
     }
 }
