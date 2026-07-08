@@ -15,7 +15,8 @@ class GeocodeEstablishmentsCommand extends Command
 {
     protected $signature = 'fbde:geocode
         {--department= : Limiter à un département (ex. 33)}
-        {--limit= : Plafond de fiches traitées}';
+        {--limit= : Plafond de fiches traitées}
+        {--status= : Limiter à un statut (ex. active)}';
 
     protected $description = 'Géocode via la BAN les établissements sans coordonnées';
 
@@ -31,6 +32,7 @@ class GeocodeEstablishmentsCommand extends Command
             $stats = $service->geocodeMissing(
                 $this->option('department') ?: null,
                 $this->option('limit') !== null ? (int) $this->option('limit') : null,
+                $this->option('status') ?: null,
             );
 
             $rate = $stats['candidates'] > 0

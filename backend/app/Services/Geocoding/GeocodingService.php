@@ -20,10 +20,15 @@ class GeocodingService
     /**
      * @param  string|null  $department  limiter à un département
      * @param  int|null  $limit  plafond de fiches traitées (tests, reprises)
+     * @param  string|null  $status  limiter à un statut (ex. « active » — le
+     *                               critère du correctif 5 porte sur les actifs)
      * @return array{candidates: int, geocoded: int, below_threshold: int, unmatched: int}
      */
-    public function geocodeMissing(?string $department = null, ?int $limit = null): array
-    {
+    public function geocodeMissing(
+        ?string $department = null,
+        ?int $limit = null,
+        ?string $status = null,
+    ): array {
         $stats = ['candidates' => 0, 'geocoded' => 0, 'below_threshold' => 0, 'unmatched' => 0];
         $minScore = (float) config('services.ban.min_score');
         $batchSize = (int) config('services.ban.batch_size');
@@ -35,6 +40,7 @@ class GeocodingService
                 $query->whereNotNull('address_line')->orWhereNotNull('city');
             })
             ->when($department, fn ($q) => $q->where('department_code', $department))
+            ->when($status, fn ($q) => $q->where('status', $status))
             ->select(['id', 'siret', 'address_line', 'postal_code', 'city', 'city_code'])
             ->chunkById($batchSize, function ($establishments) use (&$stats, &$remaining, $minScore): bool {
                 if ($remaining !== null) {
