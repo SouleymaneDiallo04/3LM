@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 /**
  * Authentification par token Sanctum (§7 : POST /api/v1/auth/login · /logout).
@@ -21,10 +20,7 @@ class AuthController extends Controller
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        $request->authenticate();
-
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
+        $user = $request->authenticate();
 
         if ($user->hasTwoFactorEnabled()) {
             $challenge = $user->createToken(
