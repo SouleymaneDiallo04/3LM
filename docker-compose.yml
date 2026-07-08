@@ -14,6 +14,24 @@ services:
         condition: service_started
     networks: [fbde]
 
+  # Workers de files d'attente (§5.2 : Redis + Horizon — imports, crawling,
+  # exports en tâches de fond avec supervision et reprises).
+  horizon:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: fbde_horizon
+    working_dir: /var/www/html
+    command: php artisan horizon
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks: [fbde]
+
   nginx:
     image: nginx:1.27-alpine
     container_name: fbde_nginx
