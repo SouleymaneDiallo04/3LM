@@ -12,8 +12,8 @@ Monorepo :
 
 ```
 fbde/
-├── backend/          # API REST — Laravel 12 / PHP 8.4
-├── frontend/         # SPA — React 18 + TypeScript + Vite + Tailwind
+├── backend/          # API REST — Laravel 13 / PHP 8.4 (ADR 0001)
+├── frontend/         # SPA — React 19 + TypeScript + Vite + Tailwind (ADR 0002)
 ├── docker/           # Images et configuration des conteneurs
 │   ├── php/          #   PHP-FPM 8.4 (extensions pgsql, redis…)
 │   └── nginx/        #   Reverse proxy → backend/public
@@ -30,8 +30,8 @@ fbde/
 | Enrichissement web | Crawler (robots.txt, 1 req/s/domaine) | email, réseaux, note JSON-LD |
 
 ### Stack
-Laravel 12 · PostgreSQL 16 + PostGIS + pgvector · Redis 7 + Horizon · Sanctum + TOTP ·
-React 18 + TS + Tailwind · Leaflet + OSM · Docker · Nginx.
+Laravel 13 · PostgreSQL 16 + PostGIS + pgvector · Redis 7 + Horizon · Sanctum + TOTP ·
+React 19 + TS + Tailwind · Leaflet + OSM · Docker · Nginx.
 
 ## Démarrage (développement)
 
