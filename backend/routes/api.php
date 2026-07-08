@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\EstablishmentController;
 use App\Http\Controllers\Api\V1\TwoFactorController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,4 +38,13 @@ Route::prefix('v1')->group(function (): void {
             });
         });
     });
+
+    // Catalogue (§7) : recherche multicritères et fiche. L'endpoint garde le
+    // nom « companies » du CDC ; la fiche est l'établissement (ADR 0003).
+    Route::middleware(['auth:sanctum', 'abilities:*', 'permission:companies.view'])
+        ->group(function (): void {
+            Route::get('companies', [EstablishmentController::class, 'index'])->name('companies.index');
+            Route::get('companies/{establishment}', [EstablishmentController::class, 'show'])
+                ->name('companies.show');
+        });
 });

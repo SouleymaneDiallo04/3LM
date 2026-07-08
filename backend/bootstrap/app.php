@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\Http\Middleware\CheckAbilities;
 use Laravel\Sanctum\Http\Middleware\CheckForAnyAbility;
+use Spatie\Permission\Middleware\PermissionMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,10 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // §7 : limitation de débit de l'API — 60 req/min par token/utilisateur.
         $middleware->throttleApi();
 
-        // Contrôle des capacités des tokens Sanctum (défi 2FA vs token complet).
+        // Contrôle des capacités des tokens Sanctum (défi 2FA vs token complet)
+        // et autorisation par permission granulaire (EF-10.2).
         $middleware->alias([
             'abilities' => CheckAbilities::class,
             'ability' => CheckForAnyAbility::class,
+            'permission' => PermissionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
