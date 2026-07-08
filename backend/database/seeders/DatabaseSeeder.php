@@ -19,7 +19,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(RoleSeeder::class);
+        $this->call([
+            RoleSeeder::class,
+            RegionSeeder::class,
+            DepartmentSeeder::class,
+        ]);
 
         $email = env('FBDE_ADMIN_EMAIL');
         $password = env('FBDE_ADMIN_PASSWORD');
