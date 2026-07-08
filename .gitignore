@@ -1,0 +1,27 @@
+# --- OS / IDE ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.user
+
+# --- Env & secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- Docker ---
+docker/data/
+*.local.yml
+
+# --- Node (garde-fou, le frontend a son propre .gitignore) ---
+node_modules/
+dist/
+*.log
+
+# --- PHP / Laravel (garde-fou, le backend a son propre .gitignore) ---
+vendor/
+/backend/storage/*.key

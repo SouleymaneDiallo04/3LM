@@ -1,0 +1,7 @@
+# Fins de ligne normalisées en LF pour tout fichier texte : les fichiers
+# exécutés dans les conteneurs Linux (scripts sh, configs) cassent en CRLF.
+* text=auto eol=lf
+
+# Scripts Windows : CRLF requis
+*.bat text eol=crlf
+*.cmd text eol=crlf
