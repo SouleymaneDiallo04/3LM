@@ -4,6 +4,8 @@ use App\Models\Company;
 use App\Models\Establishment;
 use App\Models\Import;
 use App\Services\Geocoding\GeocodingService;
+use Database\Seeders\DepartmentSeeder;
+use Database\Seeders\RegionSeeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
@@ -121,7 +123,7 @@ it('filtre par département et trace l\'exécution via la commande (imports)', f
     Establishment::where('siret', '33333333300033')->update(['department_code' => null]);
 
     // Rattache uniquement le bordelais au département 33.
-    $this->seed([Database\Seeders\RegionSeeder::class, Database\Seeders\DepartmentSeeder::class]);
+    $this->seed([RegionSeeder::class, DepartmentSeeder::class]);
     Establishment::where('siret', '33333333300033')->update(['department_code' => '33']);
 
     Http::fake([

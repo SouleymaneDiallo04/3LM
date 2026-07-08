@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\Geocoding\BanGeocoder;
+use App\Services\Geocoding\Contracts\Geocoder;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -17,8 +19,8 @@ class AppServiceProvider extends ServiceProvider
         // §5.3 : implémentations substituables — BAN en source primaire,
         // Nominatim auto-hébergé en repli (bascule par configuration).
         $this->app->bind(
-            \App\Services\Geocoding\Contracts\Geocoder::class,
-            \App\Services\Geocoding\BanGeocoder::class,
+            Geocoder::class,
+            BanGeocoder::class,
         );
     }
 
