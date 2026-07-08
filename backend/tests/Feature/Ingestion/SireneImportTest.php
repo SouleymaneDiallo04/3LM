@@ -89,6 +89,19 @@ it('importe les établissements : rattachement, géolocalisation, rejets', funct
     // Corse : code commune 2A004 → département 2A.
     expect(Establishment::where('siret', '44444444400012')->value('department_code'))->toBe('2A');
 
+    // Coordonnées Lambert-93 du stock standard, reprojetées en WGS84 par
+    // PostGIS : la position stockée doit coïncider avec la reprojection
+    // de référence (à moins de 10 m).
+    $expected = DB::selectOne(
+        'SELECT ST_X(p) AS lon, ST_Y(p) AS lat FROM (
+            SELECT ST_Transform(ST_SetSRID(ST_MakePoint(1176000, 6107000), 2154), 4326) AS p
+        ) t',
+    );
+    expect(
+        Establishment::withinRadius((float) $expected->lat, (float) $expected->lon, 0.01)
+            ->pluck('siret'),
+    )->toContain('44444444400012');
+
     // Sans coordonnées dans le stock : non géolocalisé (BAN prendra le relais).
     expect(Establishment::where('siret', '22222222200015')->firstOrFail()->location)->toBeNull();
 });
@@ -121,6 +134,22 @@ it('filtre l\'import par département — démonstration « département test »
 
     expect($stats['created'])->toBe(1)
         ->and(Establishment::pluck('siret')->all())->toBe(['11111111100011']);
+});
+
+it('restreint les unités légales aux SIREN du département (pré-scan)', function (): void {
+    $connector = sireneConnector('75');
+
+    // Pré-scan : Paris (75) ne contient que 111111111 et 555555555.
+    $sirens = $connector->collectSirens();
+    expect($sirens)->toEqualCanonicalizing(['111111111', '555555555']);
+
+    $connector->setSirenWhitelist($sirens);
+    $stats = app(IngestionService::class)->importCompanies($connector);
+
+    // 111111111 importée ; 555555555 rejetée (exclusion RGPD) ; les autres
+    // unités du fichier national ne sont pas touchées.
+    expect($stats)->toBe(['created' => 1, 'updated' => 0, 'rejected' => 1])
+        ->and(Company::pluck('siren')->all())->toBe(['111111111']);
 });
 
 it('trace l\'import dans la table imports via la commande artisan (EF-04.5)', function (): void {

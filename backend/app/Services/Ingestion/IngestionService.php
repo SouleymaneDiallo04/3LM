@@ -111,11 +111,21 @@ class IngestionService
                     continue;
                 }
 
+                // WGS84 direct (variante géolocalisée) prioritaire ;
+                // sinon Lambert-93 du stock standard, converti par PostGIS.
                 if ($row['longitude'] !== null && $row['latitude'] !== null) {
                     $coordinates[] = [
                         'siret' => $row['siret'],
-                        'longitude' => $row['longitude'],
-                        'latitude' => $row['latitude'],
+                        'srid' => 4326,
+                        'x' => $row['longitude'],
+                        'y' => $row['latitude'],
+                    ];
+                } elseif (($row['lambert_x'] ?? null) !== null && ($row['lambert_y'] ?? null) !== null) {
+                    $coordinates[] = [
+                        'siret' => $row['siret'],
+                        'srid' => 2154,
+                        'x' => $row['lambert_x'],
+                        'y' => $row['lambert_y'],
                     ];
                 }
 
@@ -123,7 +133,7 @@ class IngestionService
                 $row['imported_at'] = $now;
                 $row['created_at'] = $now;
                 $row['updated_at'] = $now;
-                unset($row['siren'], $row['longitude'], $row['latitude']);
+                unset($row['siren'], $row['longitude'], $row['latitude'], $row['lambert_x'], $row['lambert_y']);
                 $rows[] = $row;
             }
 
@@ -146,9 +156,11 @@ class IngestionService
     }
 
     /**
-     * Applique les coordonnées SIRENE géolocalisées par lot (ST_MakePoint).
+     * Applique les coordonnées SIRENE par lot. Les points WGS84 (4326) sont
+     * posés tels quels ; les points Lambert-93 (2154, stock standard INSEE)
+     * sont reprojetés par PostGIS (ST_Transform).
      *
-     * @param  list<array{siret: string, longitude: float, latitude: float}>  $coordinates
+     * @param  list<array{siret: string, srid: int, x: float, y: float}>  $coordinates
      */
     private function applyCoordinates(array $coordinates): int
     {
@@ -160,15 +172,15 @@ class IngestionService
         $bindings = [];
 
         foreach ($coordinates as $point) {
-            $values[] = '(?, ?::float, ?::float)';
-            array_push($bindings, $point['siret'], $point['longitude'], $point['latitude']);
+            $values[] = '(?, ?::int, ?::float, ?::float)';
+            array_push($bindings, $point['siret'], $point['srid'], $point['x'], $point['y']);
         }
 
         return DB::update(
             'UPDATE establishments AS e
-             SET location = ST_SetSRID(ST_MakePoint(d.lon, d.lat), 4326)::geography,
+             SET location = ST_Transform(ST_SetSRID(ST_MakePoint(d.x, d.y), d.srid), 4326)::geography,
                  geo_source = \'sirene\'
-             FROM (VALUES '.implode(', ', $values).') AS d(siret, lon, lat)
+             FROM (VALUES '.implode(', ', $values).') AS d(siret, srid, x, y)
              WHERE e.siret = d.siret',
             $bindings,
         );

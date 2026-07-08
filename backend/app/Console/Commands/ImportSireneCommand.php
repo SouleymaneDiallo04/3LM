@@ -42,12 +42,24 @@ class ImportSireneCommand extends Command
             }
         }
 
+        $department = $this->option('department') ?: null;
+
         $connector = new SireneStockConnector(
             $normalizer,
             $unites,
             $etablissements,
-            $this->option('department') ?: null,
+            $department,
         );
+
+        // Import par département : le fichier des unités légales est
+        // national — seules celles ayant un établissement dans le
+        // département sont importées (pré-scan des SIREN).
+        if ($department !== null) {
+            $this->info("Pré-scan des SIREN du département {$department}…");
+            $sirens = $connector->collectSirens();
+            $connector->setSirenWhitelist($sirens);
+            $this->info(count($sirens).' unités légales concernées.');
+        }
 
         $import = Import::create([
             'source' => 'sirene',

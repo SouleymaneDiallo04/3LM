@@ -19,6 +19,9 @@ use RuntimeException;
  */
 class SireneStockConnector implements CompanyRegistryConnector
 {
+    /** @var array<string, true>|null Restriction aux SIREN listés (import par département). */
+    private ?array $sirenWhitelist = null;
+
     public function __construct(
         private readonly NameNormalizer $normalizer,
         private readonly string $unitesLegalesPath,
@@ -26,9 +29,43 @@ class SireneStockConnector implements CompanyRegistryConnector
         private readonly ?string $departmentFilter = null,
     ) {}
 
+    /**
+     * Restreint companies() aux SIREN donnés. Utilisé pour l'import par
+     * département : le fichier des unités légales est national, seules
+     * celles ayant un établissement dans le périmètre sont importées.
+     *
+     * @param  list<string>  $sirens
+     */
+    public function setSirenWhitelist(array $sirens): void
+    {
+        $this->sirenWhitelist = array_fill_keys($sirens, true);
+    }
+
+    /**
+     * Pré-scan : SIREN de tous les établissements du périmètre courant
+     * (une passe en flux sur le fichier des établissements).
+     *
+     * @return list<string>
+     */
+    public function collectSirens(): array
+    {
+        $sirens = [];
+
+        foreach ($this->establishments() as $row) {
+            $sirens[$row['siren']] = true;
+        }
+
+        return array_keys($sirens);
+    }
+
     public function companies(): iterable
     {
         foreach ($this->readCsv($this->unitesLegalesPath) as $row) {
+            if ($this->sirenWhitelist !== null
+                && ! isset($this->sirenWhitelist[$row['siren'] ?? ''])) {
+                continue;
+            }
+
             $name = $row['denominationUniteLegale']
                 ?: trim(($row['nomUniteLegale'] ?? '').' '.($row['prenom1UniteLegale'] ?? ''));
 
@@ -97,8 +134,34 @@ class SireneStockConnector implements CompanyRegistryConnector
                     ? (float) $row['longitude'] : null,
                 'latitude' => isset($row['latitude']) && $row['latitude'] !== ''
                     ? (float) $row['latitude'] : null,
+                // Stock standard : coordonnées Lambert-93 (métropole + Corse
+                // uniquement — les DROM utilisent d'autres projections, leur
+                // géocodage passera par la BAN).
+                ...$this->lambertCoordinates($row),
             ];
         }
+    }
+
+    /**
+     * Coordonnées Lambert-93 du stock INSEE, si présentes et exploitables.
+     *
+     * @param  array<string, string>  $row
+     * @return array{lambert_x: float|null, lambert_y: float|null}
+     */
+    private function lambertCoordinates(array $row): array
+    {
+        $x = $row['coordonneeLambertAbscisseEtablissement'] ?? '';
+        $y = $row['coordonneeLambertOrdonneeEtablissement'] ?? '';
+        $department = $this->departmentFromCityCode($row['codeCommuneEtablissement'] ?? '');
+
+        // Lambert-93 (SRID 2154) n'est défini que pour la métropole.
+        $isMetropole = $department !== null && ! str_starts_with($department, '97');
+
+        if (! $isMetropole || ! is_numeric($x) || ! is_numeric($y)) {
+            return ['lambert_x' => null, 'lambert_y' => null];
+        }
+
+        return ['lambert_x' => (float) $x, 'lambert_y' => (float) $y];
     }
 
     /**
@@ -125,7 +188,12 @@ class SireneStockConnector implements CompanyRegistryConnector
 
             while (($values = fgetcsv($stream, escape: '')) !== false) {
                 if (count($values) === count($headers)) {
-                    yield array_combine($headers, $values);
+                    // « [ND] » : champ masqué par l'INSEE (unité protégée) —
+                    // traité comme absent (note de cadrage §3).
+                    yield array_combine($headers, array_map(
+                        static fn (string $v): string => $v === '[ND]' ? '' : $v,
+                        $values,
+                    ));
                 }
             }
         } finally {
