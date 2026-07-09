@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\EstablishmentController;
 use App\Http\Controllers\Api\V1\ExportController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\SearchHistoryController;
 use App\Http\Controllers\Api\V1\StatisticsController;
 use App\Http\Controllers\Api\V1\TwoFactorController;
@@ -62,6 +63,14 @@ Route::prefix('v1')->group(function (): void {
     // Agrégats du tableau de bord (§7, EF-06).
     Route::middleware(['auth:sanctum', 'abilities:*', 'permission:statistics.view'])
         ->get('statistics', [StatisticsController::class, 'index'])->name('statistics');
+
+    // Notifications interface (EF-10.4) : propres à l'utilisateur connecté.
+    Route::middleware(['auth:sanctum', 'abilities:*'])->group(function (): void {
+        Route::get('notifications', [NotificationController::class, 'index'])
+            ->name('notifications.index');
+        Route::post('notifications/read', [NotificationController::class, 'markAllRead'])
+            ->name('notifications.read');
+    });
 
     // Exports asynchrones (§7, EF-07).
     Route::middleware(['auth:sanctum', 'abilities:*', 'permission:exports.create'])

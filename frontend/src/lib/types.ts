@@ -85,6 +85,22 @@ export type MapData =
   | { mode: 'points'; total: number; points: MapPoint[] }
   | { mode: 'clusters'; total: number; clusters: MapCluster[] }
 
+/** Notification interface (EF-10.4). */
+export interface AppNotification {
+  id: string
+  type: 'ExportReady' | 'SireneImportFinished' | string
+  data: {
+    export_id?: number
+    format?: string
+    rows_count?: number
+    import_id?: number
+    source?: string
+    stats?: unknown
+  }
+  read_at: string | null
+  created_at: string
+}
+
 /** Suivi d'un export asynchrone (EF-07). */
 export interface ExportStatus {
   id: number

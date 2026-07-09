@@ -8,10 +8,12 @@ use App\Services\Ingestion\NameNormalizer;
 use App\Services\Ingestion\Sirene\SireneStockConnector;
 use Database\Seeders\DepartmentSeeder;
 use Database\Seeders\RegionSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Facades\DB;
 
 beforeEach(function (): void {
-    $this->seed([RegionSeeder::class, DepartmentSeeder::class]);
+    // RoleSeeder : la commande d'import notifie le rôle administrateur (EF-10.4).
+    $this->seed([RoleSeeder::class, RegionSeeder::class, DepartmentSeeder::class]);
 
     // Exclusion RGPD active pour l'unité 555555555 (§2.4).
     DB::table('exclusion_list')->insert([

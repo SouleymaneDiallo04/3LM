@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\Import;
+use App\Models\User;
+use App\Notifications\SireneImportFinished;
 use App\Services\Ingestion\IngestionService;
 use App\Services\Ingestion\NameNormalizer;
 use App\Services\Ingestion\Sirene\SireneStockConnector;
@@ -95,6 +97,10 @@ class ImportSireneCommand extends Command
                     'establishments' => $establishmentStats,
                 ],
             ]);
+
+            // Import terminé (EF-10.4) : les administrateurs sont prévenus.
+            User::role('administrateur')->get()
+                ->each(fn (User $admin) => $admin->notify(new SireneImportFinished($import)));
         } catch (Throwable $exception) {
             $import->update([
                 'status' => 'failed',

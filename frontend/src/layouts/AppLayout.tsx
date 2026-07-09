@@ -1,5 +1,6 @@
 import { Navigate, NavLink, Outlet } from 'react-router'
 import { useAuth } from '../features/auth/AuthContext'
+import NotificationBell from '../features/notifications/NotificationBell'
 
 /**
  * Gabarit des pages protégées : barre latérale de navigation + en-tête.
@@ -52,6 +53,8 @@ export default function AppLayout() {
             </NavLink>
           ))}
         </nav>
+
+        <NotificationBell />
 
         <div className="border-t border-slate-200 px-4 py-3">
           <p className="truncate text-sm font-medium text-slate-900">
