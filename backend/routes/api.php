@@ -47,9 +47,11 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware(['auth:sanctum', 'abilities:*', 'permission:companies.view'])
         ->group(function (): void {
             Route::get('companies', [EstablishmentController::class, 'index'])->name('companies.index');
-            // « facets » avant {establishment} : sinon le binding l'avalerait.
+            // « facets » et « map » avant {establishment} : sinon le binding les avalerait.
             Route::get('companies/facets', [EstablishmentController::class, 'facets'])
                 ->name('companies.facets');
+            Route::get('companies/map', [EstablishmentController::class, 'map'])
+                ->name('companies.map');
             Route::get('companies/{establishment}', [EstablishmentController::class, 'show'])
                 ->name('companies.show');
 

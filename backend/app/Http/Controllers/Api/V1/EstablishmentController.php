@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Catalog\MapSearchRequest;
 use App\Http\Requests\Catalog\SearchEstablishmentsRequest;
 use App\Http\Resources\EstablishmentResource;
 use App\Jobs\RecordSearchJob;
 use App\Models\Establishment;
 use App\Services\Catalog\EstablishmentSearch;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -55,6 +57,79 @@ class EstablishmentController extends Controller
     {
         return response()->json([
             'data' => $this->search->facets($request->validated()),
+        ]);
+    }
+
+    /**
+     * Carte par emprise (EF-06.3, correctif 16) : points légers dans le
+     * rectangle visible, plafonnés ; au-delà, agrégats par cellule calculés
+     * en SQL (ST_SnapToGrid) — la carte ne reçoit jamais toute la base.
+     * Les déplacements de carte ne sont pas historisés (EF-01.6 vise les
+     * recherches, pas la navigation).
+     */
+    public function map(MapSearchRequest $request): JsonResponse
+    {
+        $filters = $request->validated();
+        [$minLon, $minLat, $maxLon, $maxLat] = $request->bbox();
+
+        $base = fn (): Builder => $this->search->buildQuery($filters)
+            ->reorder()
+            ->withoutEagerLoads()
+            ->select([])
+            ->withinBbox($minLon, $minLat, $maxLon, $maxLat);
+
+        $limit = (int) config('fbde.map_points_limit', 2000);
+
+        // Tentative directe en mode points (limit+1 détecte le débordement) :
+        // le cas courant — carte zoomée — ne paie qu'une requête indexée,
+        // sans count() préalable sur l'emprise entière.
+        $points = $base()
+            ->select(['establishments.id', 'establishments.siret', 'establishments.name'])
+            ->selectRaw('ST_X(location::geometry) AS longitude, ST_Y(location::geometry) AS latitude')
+            ->limit($limit + 1)
+            ->getQuery()
+            ->get();
+
+        if ($points->count() <= $limit) {
+            return response()->json([
+                'data' => [
+                    'mode' => 'points',
+                    'total' => $points->count(),
+                    'points' => $points->map(fn ($row): array => [
+                        'id' => (int) $row->id,
+                        'siret' => $row->siret,
+                        'name' => $row->name,
+                        'longitude' => (float) $row->longitude,
+                        'latitude' => (float) $row->latitude,
+                    ]),
+                ],
+            ]);
+        }
+
+        // Grille ~40×40 cellules sur l'emprise ; chaque agrégat est posé au
+        // barycentre de ses points (rendu plus fidèle qu'un coin de cellule).
+        $cellWidth = max(($maxLon - $minLon) / 40, 1e-6);
+        $cellHeight = max(($maxLat - $minLat) / 40, 1e-6);
+
+        $clusters = $base()
+            ->selectRaw('avg(ST_X(location::geometry))::float8 AS longitude')
+            ->selectRaw('avg(ST_Y(location::geometry))::float8 AS latitude')
+            ->selectRaw('count(*) AS count')
+            ->groupByRaw('ST_SnapToGrid(location::geometry, ?, ?)', [$cellWidth, $cellHeight])
+            ->getQuery()
+            ->get()
+            ->map(fn ($row): array => [
+                'longitude' => (float) $row->longitude,
+                'latitude' => (float) $row->latitude,
+                'count' => (int) $row->count,
+            ]);
+
+        return response()->json([
+            'data' => [
+                'mode' => 'clusters',
+                'total' => $clusters->sum('count'),
+                'clusters' => $clusters,
+            ],
         ]);
     }
 

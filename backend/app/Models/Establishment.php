@@ -64,4 +64,25 @@ class Establishment extends Model
             [$longitude, $latitude, $radiusKm * 1000],
         );
     }
+
+    /**
+     * Emprise géographique (EF-06.3, correctif 16) : établissements dont la
+     * position intersecte le rectangle donné — ST_Intersects sur l'index
+     * GiST ; les non-géolocalisés (location NULL) sont exclus d'office.
+     *
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopeWithinBbox(
+        Builder $query,
+        float $minLon,
+        float $minLat,
+        float $maxLon,
+        float $maxLat,
+    ): Builder {
+        return $query->whereRaw(
+            'ST_Intersects(location, ST_MakeEnvelope(?, ?, ?, ?, 4326)::geography)',
+            [$minLon, $minLat, $maxLon, $maxLat],
+        );
+    }
 }
