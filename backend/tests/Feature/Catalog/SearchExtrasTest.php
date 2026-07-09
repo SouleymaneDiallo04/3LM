@@ -116,3 +116,22 @@ it('refuse les statistiques sans la permission statistics.view', function (): vo
 
     $this->actingAs($noRole)->getJson('/api/v1/statistics')->assertForbidden();
 });
+
+// Le cache Redis de Laravel 13 refuse de désérialiser les objets
+// (__PHP_Incomplete_Class) : le payload mis en cache doit être 100 % scalaire.
+// Reproduit le crash réel du dashboard (top_cities devenait un objet vide).
+it('sert les statistiques intactes depuis le cache Redis (2e appel)', function (): void {
+    config(['cache.default' => 'redis']);
+    Cache::store('redis')->forget('statistics:dashboard');
+
+    $fresh = $this->actingAs($this->user)->getJson('/api/v1/statistics');
+    $cached = $this->actingAs($this->user)->getJson('/api/v1/statistics');
+
+    $cached->assertOk();
+    expect($cached->json('data'))->toBe($fresh->json('data'))
+        ->and($cached->json('data.top_cities.0.city'))->not->toBeNull()
+        ->and($cached->json('data.by_naf_division.0.code'))->not->toBeNull()
+        ->and($cached->json('data.recent_imports'))->toBeArray();
+
+    Cache::store('redis')->forget('statistics:dashboard');
+});

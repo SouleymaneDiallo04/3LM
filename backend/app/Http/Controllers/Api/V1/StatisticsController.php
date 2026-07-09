@@ -49,7 +49,10 @@ class StatisticsController extends Controller
                     'website_rate' => $rate((int) $kpis->with_website),
                     'geocoding_rate' => $rate((int) $kpis->geolocated),
                 ],
-                // Répartitions (EF-06.2) — établissements actifs.
+                // Répartitions (EF-06.2) — établissements actifs. Tout le
+                // payload mis en cache doit rester scalaire : le cache Redis
+                // de Laravel 13 ne désérialise pas les objets
+                // (__PHP_Incomplete_Class), d'où les ->all()/toArray().
                 'by_department' => $active->clone()
                     ->selectRaw('department_code AS code, count(*) AS count')
                     ->whereNotNull('department_code')
@@ -57,7 +60,8 @@ class StatisticsController extends Controller
                     ->orderByDesc('count')
                     ->limit(20)
                     ->getQuery()->get()
-                    ->map(fn ($r): array => ['code' => $r->code, 'count' => (int) $r->count]),
+                    ->map(fn ($r): array => ['code' => $r->code, 'count' => (int) $r->count])
+                    ->all(),
                 'top_cities' => $active->clone()
                     ->selectRaw('city, count(*) AS count')
                     ->whereNotNull('city')
@@ -65,7 +69,8 @@ class StatisticsController extends Controller
                     ->orderByDesc('count')
                     ->limit(20)
                     ->getQuery()->get()
-                    ->map(fn ($r): array => ['city' => $r->city, 'count' => (int) $r->count]),
+                    ->map(fn ($r): array => ['city' => $r->city, 'count' => (int) $r->count])
+                    ->all(),
                 'by_naf_division' => $active->clone()
                     ->selectRaw('LEFT(naf_code, 2) AS code, count(*) AS count')
                     ->whereNotNull('naf_code')
@@ -73,12 +78,15 @@ class StatisticsController extends Controller
                     ->orderByDesc('count')
                     ->limit(10)
                     ->getQuery()->get()
-                    ->map(fn ($r): array => ['code' => $r->code, 'count' => (int) $r->count]),
+                    ->map(fn ($r): array => ['code' => $r->code, 'count' => (int) $r->count])
+                    ->all(),
                 // Évolution des imports (EF-06.2).
                 'recent_imports' => Import::query()
                     ->latest('id')
                     ->limit(10)
-                    ->get(['id', 'source', 'status', 'stats', 'started_at', 'finished_at']),
+                    ->get(['id', 'source', 'status', 'stats', 'started_at', 'finished_at'])
+                    ->map(fn (Import $i): array => $i->toArray())
+                    ->all(),
                 'generated_at' => now()->toIso8601String(),
             ];
         });
