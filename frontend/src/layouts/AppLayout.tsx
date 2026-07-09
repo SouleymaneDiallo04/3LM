@@ -29,19 +29,27 @@ export default function AppLayout() {
         </div>
 
         <nav className="flex-1 space-y-1 px-2 py-4">
-          <NavLink
-            to="/"
-            end
-            className={({ isActive }) =>
-              `block rounded-md px-3 py-2 text-sm font-medium ${
-                isActive
-                  ? 'bg-blue-50 text-blue-700'
-                  : 'text-slate-600 hover:bg-slate-50'
-              }`
-            }
-          >
-            Tableau de bord
-          </NavLink>
+          {(
+            [
+              ['/', 'Tableau de bord', true],
+              ['/recherche', 'Recherche', false],
+            ] as const
+          ).map(([to, label, end]) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) =>
+                `block rounded-md px-3 py-2 text-sm font-medium ${
+                  isActive
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-slate-600 hover:bg-slate-50'
+                }`
+              }
+            >
+              {label}
+            </NavLink>
+          ))}
         </nav>
 
         <div className="border-t border-slate-200 px-4 py-3">
