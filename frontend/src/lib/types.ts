@@ -64,6 +64,27 @@ export interface SearchFilters {
   direction?: 'asc' | 'desc'
 }
 
+/** Point léger servi par la carte (EF-06.3, correctif 16). */
+export interface MapPoint {
+  id: number
+  siret: string
+  name: string | null
+  longitude: number
+  latitude: number
+}
+
+/** Agrégat par cellule quand l'emprise dépasse le plafond de points. */
+export interface MapCluster {
+  longitude: number
+  latitude: number
+  count: number
+}
+
+/** Réponse de GET /companies/map : points ou agrégats, jamais toute la base. */
+export type MapData =
+  | { mode: 'points'; total: number; points: MapPoint[] }
+  | { mode: 'clusters'; total: number; clusters: MapCluster[] }
+
 /** Suivi d'un export asynchrone (EF-07). */
 export interface ExportStatus {
   id: number

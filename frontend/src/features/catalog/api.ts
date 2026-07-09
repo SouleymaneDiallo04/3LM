@@ -1,5 +1,5 @@
 import { api } from '../../lib/api'
-import type { CursorPage, Establishment, SearchFilters } from '../../lib/types'
+import type { CursorPage, Establishment, MapData, SearchFilters } from '../../lib/types'
 
 /** Recherche multicritères synchrone (§7, correctif 3). */
 export async function searchEstablishments(
@@ -17,6 +17,19 @@ export async function searchEstablishments(
   )
   const { data } = await api.get('/companies', { params })
   return data
+}
+
+/** Contenu de la carte pour l'emprise visible (EF-06.3, correctif 16). */
+export async function fetchMapData(
+  bbox: string,
+  filters: SearchFilters,
+  signal?: AbortSignal,
+): Promise<MapData> {
+  const params = Object.fromEntries(
+    Object.entries({ ...filters, bbox }).filter(([, v]) => v !== undefined && v !== '' && v !== null),
+  )
+  const { data } = await api.get('/companies/map', { params, signal })
+  return data.data
 }
 
 /** Fiche complète d'un établissement. */

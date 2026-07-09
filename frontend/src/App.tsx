@@ -4,6 +4,7 @@ import AppLayout from './layouts/AppLayout'
 import DashboardPage from './pages/DashboardPage'
 import EstablishmentPage from './pages/EstablishmentPage'
 import LoginPage from './pages/LoginPage'
+import MapPage from './pages/MapPage'
 import SearchPage from './pages/SearchPage'
 import TwoFactorPage from './pages/TwoFactorPage'
 
@@ -17,6 +18,7 @@ export default function App() {
           <Route element={<AppLayout />}>
             <Route index element={<DashboardPage />} />
             <Route path="/recherche" element={<SearchPage />} />
+            <Route path="/carte" element={<MapPage />} />
             <Route path="/entreprises/:id" element={<EstablishmentPage />} />
           </Route>
         </Routes>

@@ -106,10 +106,11 @@ class EstablishmentController extends Controller
             ]);
         }
 
-        // Grille ~40×40 cellules sur l'emprise ; chaque agrégat est posé au
-        // barycentre de ses points (rendu plus fidèle qu'un coin de cellule).
-        $cellWidth = max(($maxLon - $minLon) / 40, 1e-6);
-        $cellHeight = max(($maxLat - $minLat) / 40, 1e-6);
+        // Grille ~16×10 cellules sur l'emprise (≈ la taille d'une pastille à
+        // l'écran — validé sur Bordeaux centre : 40×40 noyait la carte sous
+        // ~1600 bulles) ; chaque agrégat est posé au barycentre de ses points.
+        $cellWidth = max(($maxLon - $minLon) / 16, 1e-6);
+        $cellHeight = max(($maxLat - $minLat) / 10, 1e-6);
 
         $clusters = $base()
             ->selectRaw('avg(ST_X(location::geometry))::float8 AS longitude')

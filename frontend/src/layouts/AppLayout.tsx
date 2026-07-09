@@ -33,6 +33,7 @@ export default function AppLayout() {
             [
               ['/', 'Tableau de bord', true],
               ['/recherche', 'Recherche', false],
+              ['/carte', 'Carte', false],
             ] as const
           ).map(([to, label, end]) => (
             <NavLink

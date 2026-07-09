@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { searchEstablishments } from '../features/catalog/api'
 import { createExport, downloadExport, getExport } from '../features/exports/api'
 import type { CursorPage, Establishment, ExportStatus, SearchFilters } from '../lib/types'
@@ -56,6 +56,28 @@ export default function SearchPage() {
   }
 
   const set = (patch: Partial<SearchFilters>) => setFilters((f) => ({ ...f, ...patch }))
+
+  // Rayon posé depuis la carte (EF-01.3) : lat/lng/radius_km dans l'URL
+  // pré-remplissent les critères et lancent la recherche à l'arrivée.
+  const [searchParams] = useSearchParams()
+  useEffect(() => {
+    const lat = Number(searchParams.get('lat'))
+    const lng = Number(searchParams.get('lng'))
+    const radius = Number(searchParams.get('radius_km'))
+    if (lat && lng && radius) {
+      const initial: SearchFilters = { status: 'active', lat, lng, radius_km: radius }
+      setFilters(initial)
+      void runSearch(initial)
+    }
+    // Uniquement à l'arrivée sur la page : la suite se joue dans le formulaire.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function clearRadius() {
+    const next = { ...filters, lat: undefined, lng: undefined, radius_km: undefined }
+    setFilters(next)
+    void runSearch(next)
+  }
 
   return (
     <div>
@@ -169,6 +191,21 @@ export default function SearchPage() {
       {error && (
         <p role="alert" className="mt-3 text-sm text-red-600">
           {error}
+        </p>
+      )}
+
+      {filters.radius_km !== undefined && (
+        <p className="mt-3 flex items-center gap-2 text-sm text-slate-600">
+          <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs text-blue-800">
+            Rayon de {filters.radius_km} km autour du point choisi sur la carte
+          </span>
+          <button
+            type="button"
+            onClick={clearRadius}
+            className="text-xs text-blue-600 hover:underline"
+          >
+            Retirer le rayon
+          </button>
         </p>
       )}
 

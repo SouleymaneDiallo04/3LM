@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+/* Agrégats de la carte (EF-06.3) : disque bleu, compteur centré.
+   Défini ici car injecté par Leaflet via divIcon, hors du scan Tailwind. */
+.fbde-cluster div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background: rgb(37 99 235 / 0.85); /* blue-600 */
+  border: 2px solid #fff;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+}
