@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Catalog\SearchEstablishmentsRequest;
 use App\Http\Resources\EstablishmentResource;
+use App\Jobs\RecordSearchJob;
 use App\Models\Establishment;
 use App\Services\Catalog\EstablishmentSearch;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
@@ -23,11 +25,37 @@ class EstablishmentController extends Controller
     {
         $filters = $request->validated();
 
+        // Historisation (EF-01.6) en file — uniquement la requête initiale,
+        // pas les pages suivantes du même parcours.
+        if (! $request->filled('cursor')) {
+            RecordSearchJob::dispatch($request->user()->id, $filters);
+        }
+
+        // Tri (EF-03.6) : ordre secondaire sur id pour un curseur stable.
+        $sort = $filters['sort'] ?? null;
+        $direction = $filters['direction'] ?? 'asc';
+
+        $query = $this->search->buildQuery($filters);
+
+        if ($sort !== null) {
+            $query->orderBy('establishments.'.$sort, $direction);
+        }
+
         return EstablishmentResource::collection(
-            $this->search->buildQuery($filters)
-                ->orderBy('establishments.id')
+            $query->orderBy('establishments.id')
                 ->cursorPaginate((int) ($filters['per_page'] ?? 25)),
         );
+    }
+
+    /**
+     * Facettes dynamiques (EF-03.3) : compteurs par département et par
+     * division NAF sur le résultat filtré courant, cache Redis 5 min (§9.2).
+     */
+    public function facets(SearchEstablishmentsRequest $request): JsonResponse
+    {
+        return response()->json([
+            'data' => $this->search->facets($request->validated()),
+        ]);
     }
 
     public function show(Establishment $establishment): EstablishmentResource

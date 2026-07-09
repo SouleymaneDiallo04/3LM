@@ -34,6 +34,9 @@ class SearchEstablishmentsRequest extends FormRequest
             'radius_km' => ['sometimes', 'numeric', 'between:1,100'],
             'per_page' => ['sometimes', 'integer', 'between:1,100'],
             'cursor' => ['sometimes', 'string'],
+            // Tri (EF-03.6) : nom, date d'ajout, score commercial, note.
+            'sort' => ['sometimes', 'in:name,imported_at,commercial_score,rating'],
+            'direction' => ['sometimes', 'in:asc,desc'],
         ];
     }
 }

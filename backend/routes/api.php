@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\EstablishmentController;
 use App\Http\Controllers\Api\V1\ExportController;
+use App\Http\Controllers\Api\V1\SearchHistoryController;
+use App\Http\Controllers\Api\V1\StatisticsController;
 use App\Http\Controllers\Api\V1\TwoFactorController;
 use Illuminate\Support\Facades\Route;
 
@@ -45,9 +47,19 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware(['auth:sanctum', 'abilities:*', 'permission:companies.view'])
         ->group(function (): void {
             Route::get('companies', [EstablishmentController::class, 'index'])->name('companies.index');
+            // « facets » avant {establishment} : sinon le binding l'avalerait.
+            Route::get('companies/facets', [EstablishmentController::class, 'facets'])
+                ->name('companies.facets');
             Route::get('companies/{establishment}', [EstablishmentController::class, 'show'])
                 ->name('companies.show');
+
+            // Historique des recherches (EF-01.6).
+            Route::get('searches', [SearchHistoryController::class, 'index'])->name('searches.index');
         });
+
+    // Agrégats du tableau de bord (§7, EF-06).
+    Route::middleware(['auth:sanctum', 'abilities:*', 'permission:statistics.view'])
+        ->get('statistics', [StatisticsController::class, 'index'])->name('statistics');
 
     // Exports asynchrones (§7, EF-07).
     Route::middleware(['auth:sanctum', 'abilities:*', 'permission:exports.create'])

@@ -5,6 +5,7 @@ namespace App\Services\Catalog;
 use App\Models\Establishment;
 use App\Services\Ingestion\NameNormalizer;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Construction de la requête de recherche multicritères (EF-01, EF-03.1a).
@@ -65,5 +66,53 @@ class EstablishmentSearch
         ));
 
         return $query;
+    }
+
+    /**
+     * Facettes dynamiques (EF-03.3) : compteurs par département et par
+     * division NAF sur le résultat filtré courant. Agrégats SQL mis en
+     * cache 5 minutes (§9.2 — résultats de facettes fréquentes).
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array{departments: list<array{code: string, count: int}>, naf_divisions: list<array{code: string, count: int}>}
+     */
+    public function facets(array $filters): array
+    {
+        ksort($filters);
+        $key = 'facets:'.md5(json_encode($filters));
+
+        return Cache::remember($key, now()->addMinutes(5), function () use ($filters): array {
+            $base = fn (): Builder => $this->buildQuery($filters)
+                ->reorder()
+                ->withoutEagerLoads()
+                ->select([]);
+
+            $departments = $base()
+                ->selectRaw('department_code AS code, count(*) AS count')
+                ->whereNotNull('department_code')
+                ->groupBy('department_code')
+                ->orderByDesc('count')
+                ->limit(20)
+                ->getQuery()
+                ->get();
+
+            $nafDivisions = $base()
+                ->selectRaw('LEFT(naf_code, 2) AS code, count(*) AS count')
+                ->whereNotNull('naf_code')
+                ->groupByRaw('LEFT(naf_code, 2)')
+                ->orderByDesc('count')
+                ->limit(20)
+                ->getQuery()
+                ->get();
+
+            return [
+                'departments' => $departments
+                    ->map(fn ($r): array => ['code' => $r->code, 'count' => (int) $r->count])
+                    ->all(),
+                'naf_divisions' => $nafDivisions
+                    ->map(fn ($r): array => ['code' => $r->code, 'count' => (int) $r->count])
+                    ->all(),
+            ];
+        });
     }
 }
