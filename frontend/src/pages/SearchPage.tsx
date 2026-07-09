@@ -134,6 +134,25 @@ export default function SearchPage() {
             />
             Inclure les établissements fermés
           </label>
+          <label className="flex items-center gap-1.5 text-sm text-slate-600">
+            Tri
+            <select
+              value={filters.sort ?? ''}
+              onChange={(e) =>
+                set({
+                  sort: (e.target.value || undefined) as typeof filters.sort,
+                  direction: e.target.value === 'name' ? 'asc' : 'desc',
+                })
+              }
+              className="rounded-md border border-slate-300 px-2 py-1"
+            >
+              <option value="">Pertinence</option>
+              <option value="name">Nom (A→Z)</option>
+              <option value="imported_at">Ajout récent</option>
+              <option value="commercial_score">Score commercial</option>
+              <option value="rating">Note</option>
+            </select>
+          </label>
         </div>
 
         <div className="flex items-end justify-end">

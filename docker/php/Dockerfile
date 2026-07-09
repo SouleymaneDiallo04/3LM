@@ -32,6 +32,7 @@ WORKDIR /var/www/html
 RUN addgroup -g 1000 app && adduser -G app -u 1000 -D app
 
 COPY zz-app-pool.conf /usr/local/etc/php-fpm.d/zz-app-pool.conf
+COPY opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 

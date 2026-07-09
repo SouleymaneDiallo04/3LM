@@ -60,6 +60,8 @@ export interface SearchFilters {
   lng?: number
   radius_km?: number
   per_page?: number
+  sort?: 'name' | 'imported_at' | 'commercial_score' | 'rating'
+  direction?: 'asc' | 'desc'
 }
 
 /** Suivi d'un export asynchrone (EF-07). */
