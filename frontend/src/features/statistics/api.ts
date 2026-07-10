@@ -7,6 +7,7 @@ export interface DashboardStatistics {
     active_establishments: number
     new_last_7_days: number
     new_last_30_days: number
+    new_contacts_30_days: number
     enriched: number
     email_rate: number
     phone_rate: number
@@ -16,6 +17,14 @@ export interface DashboardStatistics {
   by_department: { code: string; count: number }[]
   top_cities: { city: string; count: number }[]
   by_naf_division: { code: string; count: number }[]
+  recent_imports: {
+    id: number
+    source: string
+    status: string
+    stats: Record<string, unknown> | null
+    started_at: string | null
+    finished_at: string | null
+  }[]
   generated_at: string
 }
 

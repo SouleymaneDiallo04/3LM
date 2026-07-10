@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router'
 import {
   Bar,
   BarChart,
@@ -49,12 +50,20 @@ export default function DashboardPage() {
     ['Établissements actifs', kpis.active_establishments.toLocaleString('fr-FR')],
     ['Total (actifs + fermés)', kpis.total_establishments.toLocaleString('fr-FR')],
     ['Nouveaux (30 jours)', kpis.new_last_30_days.toLocaleString('fr-FR')],
+    ['Nouveaux contacts (30 j)', kpis.new_contacts_30_days.toLocaleString('fr-FR')],
     ['Géolocalisés', `${kpis.geocoding_rate} %`],
     ['Avec email', `${kpis.email_rate} %`],
     ['Avec téléphone', `${kpis.phone_rate} %`],
     ['Avec site web', `${kpis.website_rate} %`],
     ['Fiches enrichies', kpis.enriched.toLocaleString('fr-FR')],
   ]
+
+  const sourceLabels: Record<string, string> = {
+    sirene: 'Import SIRENE',
+    osm: 'Enrichissement OSM',
+    crawl: 'Crawl des sites',
+    scoring: 'Recalcul des scores',
+  }
 
   return (
     <div>
@@ -63,7 +72,7 @@ export default function DashboardPage() {
         Établissements actifs de la base — actualisé toutes les 5 minutes.
       </p>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
         {tiles.map(([label, value]) => (
           <div key={label} className="rounded-lg border border-slate-200 bg-white px-4 py-3">
             <p className="text-xs text-slate-500">{label}</p>
@@ -87,6 +96,52 @@ export default function DashboardPage() {
               .map((d) => ({ label: `NAF ${d.code}`, value: d.count }))}
           />
         </ChartCard>
+        <ChartCard title="Entreprises par département (actifs)">
+          <HorizontalBars
+            data={stats.by_department
+              .slice(0, 10)
+              .map((d) => ({ label: `Dépt ${d.code}`, value: d.count }))}
+          />
+        </ChartCard>
+        <section className="flex flex-col rounded-xl border border-slate-200 bg-white p-4">
+          <h2 className="text-sm font-semibold text-slate-900">Évolution des imports</h2>
+          <ul className="mt-2 flex-1 divide-y divide-slate-100 text-sm">
+            {stats.recent_imports.slice(0, 6).map((run) => (
+              <li key={run.id} className="flex items-center gap-3 py-1.5">
+                <span className="w-24 shrink-0 font-mono text-xs tabular-nums text-slate-500">
+                  {run.started_at
+                    ? new Date(run.started_at).toLocaleDateString('fr-FR', {
+                        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+                      })
+                    : '—'}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-slate-800">
+                  {sourceLabels[run.source] ?? run.source}
+                </span>
+                <span
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${
+                    run.status === 'completed'
+                      ? 'bg-green-50 text-green-700'
+                      : run.status === 'failed'
+                        ? 'bg-red-50 text-red-700'
+                        : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  {run.status === 'completed' ? 'terminé' : run.status === 'failed' ? 'échec' : run.status}
+                </span>
+              </li>
+            ))}
+            {stats.recent_imports.length === 0 && (
+              <li className="py-3 text-slate-500">Aucun import pour le moment.</li>
+            )}
+          </ul>
+          <Link
+            to="/carte"
+            className="mt-3 block rounded-md bg-sky-700 px-4 py-2 text-center text-sm font-semibold text-white transition-colors duration-150 hover:bg-sky-800"
+          >
+            Ouvrir la cartographie interactive
+          </Link>
+        </section>
       </div>
     </div>
   )

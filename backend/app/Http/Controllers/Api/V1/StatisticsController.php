@@ -29,7 +29,11 @@ class StatisticsController extends Controller
                     count(email) AS with_email,
                     count(phone) AS with_phone,
                     count(website) AS with_website,
-                    count(location) AS geolocated
+                    count(location) AS geolocated,
+                    count(*) FILTER (
+                        WHERE (email IS NOT NULL OR phone IS NOT NULL)
+                          AND GREATEST(enriched_at, crawled_at) >= now() - interval '30 days'
+                    ) AS new_contacts_30d
                 SQL)
                 ->getQuery()
                 ->first();
@@ -43,6 +47,9 @@ class StatisticsController extends Controller
                     'active_establishments' => $total,
                     'new_last_7_days' => (int) $kpis->new_7d,
                     'new_last_30_days' => (int) $kpis->new_30d,
+                    // Nouveaux contacts (dashboard CDC) : fiches dont un email
+                    // ou un téléphone a été collecté (OSM/crawl) sous 30 jours.
+                    'new_contacts_30_days' => (int) $kpis->new_contacts_30d,
                     'enriched' => (int) $kpis->enriched,
                     'email_rate' => $rate((int) $kpis->with_email),
                     'phone_rate' => $rate((int) $kpis->with_phone),

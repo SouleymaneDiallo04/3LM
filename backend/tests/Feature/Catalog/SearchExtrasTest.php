@@ -111,6 +111,21 @@ it('sert les KPI et répartitions du dashboard (EF-06.1, EF-06.2)', function ():
         ->and($response->json('data.top_cities'))->toHaveCount(2);
 });
 
+it('compte les nouveaux contacts collectés sur 30 jours (dashboard CDC)', function (): void {
+    // Contact collecté récemment (email trouvé au crawl il y a 2 jours).
+    Establishment::where('normalized_name', 'boulangerie a')->update([
+        'email' => 'contact@a.fr', 'crawled_at' => now()->subDays(2),
+    ]);
+    // Contact ancien : email présent mais collecte au-delà de 30 jours.
+    Establishment::where('normalized_name', 'garage b')->update([
+        'phone' => '+33 5 56 00 00 00', 'enriched_at' => now()->subDays(45),
+    ]);
+
+    $kpis = $this->actingAs($this->user)->getJson('/api/v1/statistics')->json('data.kpis');
+
+    expect($kpis['new_contacts_30_days'])->toBe(1);
+});
+
 it('refuse les statistiques sans la permission statistics.view', function (): void {
     $noRole = User::factory()->create();
 
