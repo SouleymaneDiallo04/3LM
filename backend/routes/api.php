@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\SearchHistoryController;
 use App\Http\Controllers\Api\V1\StatisticsController;
 use App\Http\Controllers\Api\V1\TwoFactorController;
+use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -63,6 +64,14 @@ Route::prefix('v1')->group(function (): void {
     // Agrégats du tableau de bord (§7, EF-06).
     Route::middleware(['auth:sanctum', 'abilities:*', 'permission:statistics.view'])
         ->get('statistics', [StatisticsController::class, 'index'])->name('statistics');
+
+    // Gestion des utilisateurs (EF-10.2) : administrateurs uniquement.
+    Route::middleware(['auth:sanctum', 'abilities:*', 'permission:users.manage'])
+        ->group(function (): void {
+            Route::get('users', [UserController::class, 'index'])->name('users.index');
+            Route::post('users', [UserController::class, 'store'])->name('users.store');
+            Route::patch('users/{user}', [UserController::class, 'update'])->name('users.update');
+        });
 
     // Notifications interface (EF-10.4) : propres à l'utilisateur connecté.
     Route::middleware(['auth:sanctum', 'abilities:*'])->group(function (): void {

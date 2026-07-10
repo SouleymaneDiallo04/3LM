@@ -5,6 +5,7 @@ namespace App\Http\Requests\Auth;
 use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -55,6 +56,14 @@ class LoginRequest extends FormRequest
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);
+        }
+
+        // Compte désactivé (EF-10.2) : identifiants valides mais accès coupé —
+        // message explicite, après vérification du mot de passe (pas d'énumération).
+        if ($user->disabled_at !== null) {
+            throw new HttpResponseException(response()->json([
+                'message' => 'Ce compte a été désactivé. Contactez votre administrateur.',
+            ], 403));
         }
 
         RateLimiter::clear($this->throttleKey());

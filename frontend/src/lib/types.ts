@@ -85,6 +85,17 @@ export type MapData =
   | { mode: 'points'; total: number; points: MapPoint[] }
   | { mode: 'clusters'; total: number; clusters: MapCluster[] }
 
+/** Utilisateur vu par l'administration (EF-10.2). */
+export interface ManagedUser {
+  id: number
+  name: string
+  email: string
+  roles: string[]
+  disabled_at: string | null
+  two_factor_enabled: boolean
+  created_at: string | null
+}
+
 /** Notification interface (EF-10.4). */
 export interface AppNotification {
   id: string

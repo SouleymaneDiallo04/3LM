@@ -7,7 +7,7 @@ import NotificationBell from '../features/notifications/NotificationBell'
  * Redirige vers /login si aucun utilisateur n'est authentifié.
  */
 export default function AppLayout() {
-  const { user, loading, logout } = useAuth()
+  const { user, loading, logout, hasPermission } = useAuth()
 
   if (loading) {
     return (
@@ -35,6 +35,10 @@ export default function AppLayout() {
               ['/', 'Tableau de bord', true],
               ['/recherche', 'Recherche', false],
               ['/carte', 'Carte', false],
+              // Administration : visible seulement avec users.manage (EF-10.2).
+              ...(hasPermission('users.manage')
+                ? ([['/utilisateurs', 'Utilisateurs', false]] as const)
+                : []),
             ] as const
           ).map(([to, label, end]) => (
             <NavLink

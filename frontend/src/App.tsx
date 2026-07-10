@@ -6,6 +6,7 @@ import EstablishmentPage from './pages/EstablishmentPage'
 import LoginPage from './pages/LoginPage'
 import MapPage from './pages/MapPage'
 import SearchPage from './pages/SearchPage'
+import UsersPage from './pages/UsersPage'
 import TwoFactorPage from './pages/TwoFactorPage'
 
 export default function App() {
@@ -19,6 +20,7 @@ export default function App() {
             <Route index element={<DashboardPage />} />
             <Route path="/recherche" element={<SearchPage />} />
             <Route path="/carte" element={<MapPage />} />
+            <Route path="/utilisateurs" element={<UsersPage />} />
             <Route path="/entreprises/:id" element={<EstablishmentPage />} />
           </Route>
         </Routes>

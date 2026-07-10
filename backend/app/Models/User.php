@@ -28,6 +28,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'disabled_at' => 'datetime',
             'password' => 'hashed',
             // §8 : chiffrement applicatif du secret TOTP et des codes de secours.
             'two_factor_secret' => 'encrypted',
