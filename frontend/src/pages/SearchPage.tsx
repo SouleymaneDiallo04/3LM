@@ -265,6 +265,44 @@ export default function SearchPage() {
             Inclure les établissements fermés
           </label>
           <label className="flex items-center gap-1.5 text-sm text-slate-600">
+            Note ≥
+            <select
+              value={filters.min_rating ?? ''}
+              onChange={(e) => set({ min_rating: e.target.value ? Number(e.target.value) : undefined })}
+              className="rounded-md border border-slate-300 px-2 py-1 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+            >
+              <option value="">—</option>
+              {[3, 3.5, 4, 4.5].map((n) => (
+                <option key={n} value={n}>{n.toLocaleString('fr-FR')}</option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center gap-1.5 text-sm text-slate-600">
+            Avis ≥
+            <input
+              type="number"
+              min={1}
+              value={filters.min_reviews ?? ''}
+              onChange={(e) => set({ min_reviews: e.target.value ? Number(e.target.value) : undefined })}
+              className="w-20 rounded-md border border-slate-300 px-2 py-1 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+            />
+          </label>
+          <label className="flex items-center gap-1.5 text-sm text-slate-600">
+            Effectif
+            <select
+              value={filters.min_employees ?? ''}
+              onChange={(e) => set({ min_employees: e.target.value || undefined })}
+              className="rounded-md border border-slate-300 px-2 py-1 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+            >
+              <option value="">Tous</option>
+              <option value="01">1 salarié et +</option>
+              <option value="11">10 et +</option>
+              <option value="21">50 et +</option>
+              <option value="31">200 et +</option>
+              <option value="42">1 000 et +</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-1.5 text-sm text-slate-600">
             Tri
             <select
               value={filters.sort ?? ''}

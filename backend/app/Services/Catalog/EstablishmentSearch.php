@@ -64,6 +64,16 @@ class EstablishmentSearch
         $query->when(isset($filters['has_website']), fn ($q) => $filters['has_website']
             ? $q->whereNotNull('website') : $q->whereNull('website'));
 
+        // Recherche avancée (CDC) : note minimale, volume d'avis minimal,
+        // taille minimale (les codes tranche INSEE sont ordonnés — la
+        // comparaison lexicographique est valide ; « NN » = non renseigné).
+        $query->when($filters['min_rating'] ?? null, fn ($q, $v) => $q->where('rating', '>=', $v));
+        $query->when($filters['min_reviews'] ?? null, fn ($q, $v) => $q->where('reviews_count', '>=', $v));
+        $query->when($filters['min_employees'] ?? null, fn ($q, $v) => $q
+            ->whereNotNull('employee_range')
+            ->where('employee_range', '!=', 'NN')
+            ->where('employee_range', '>=', $v));
+
         // Rayon géographique (EF-01.3).
         $query->when($filters['radius_km'] ?? null, fn ($q, $radius) => $q->withinRadius(
             (float) $filters['lat'],

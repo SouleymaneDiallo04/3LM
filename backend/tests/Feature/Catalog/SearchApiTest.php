@@ -119,6 +119,33 @@ it('sert le référentiel régions + départements pour les filtres', function (
         ->and(collect($idf['departments'])->pluck('code'))->toContain('75');
 });
 
+it('filtre par note minimale, volume d\'avis et taille d\'entreprise (recherche avancée CDC)', function (): void {
+    Establishment::where('siret', '11111111100011')->update([
+        'rating' => 4.6, 'reviews_count' => 87, 'employee_range' => '12', // 20-49 salariés
+    ]);
+    Establishment::where('siret', '11111111100029')->update([
+        'rating' => 3.2, 'reviews_count' => 4, 'employee_range' => '03', // 6-9 salariés
+    ]);
+
+    // Note ≥ 4 : seule la boulangerie.
+    $rated = $this->actingAs($this->commercial)->getJson('/api/v1/companies?min_rating=4');
+    expect($rated->json('data'))->toHaveCount(1)
+        ->and($rated->json('data.0.siret'))->toBe('11111111100011');
+
+    // Au moins 50 avis.
+    $reviewed = $this->actingAs($this->commercial)->getJson('/api/v1/companies?min_reviews=50');
+    expect($reviewed->json('data'))->toHaveCount(1);
+
+    // Effectif minimal 10+ (code tranche 11) : exclut le 6-9 salariés.
+    $sized = $this->actingAs($this->commercial)->getJson('/api/v1/companies?min_employees=11');
+    expect($sized->json('data'))->toHaveCount(1)
+        ->and($sized->json('data.0.siret'))->toBe('11111111100011');
+
+    // Bornes invalides rejetées.
+    $this->actingAs($this->commercial)->getJson('/api/v1/companies?min_rating=6')->assertUnprocessable();
+    $this->actingAs($this->commercial)->getJson('/api/v1/companies?min_employees=07')->assertUnprocessable();
+});
+
 it('recherche textuelle insensible aux accents et à la casse (EF-01.1)', function (): void {
     $response = $this->actingAs($this->commercial)
         ->getJson('/api/v1/companies?q='.urlencode('BOULANGÈRIE'));

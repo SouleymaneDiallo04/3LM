@@ -60,6 +60,9 @@ export interface SearchFilters {
   has_email?: boolean
   has_phone?: boolean
   has_website?: boolean
+  min_rating?: number
+  min_reviews?: number
+  min_employees?: string
   lat?: number
   lng?: number
   radius_km?: number
