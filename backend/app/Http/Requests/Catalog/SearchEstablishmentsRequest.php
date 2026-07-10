@@ -21,6 +21,8 @@ class SearchEstablishmentsRequest extends FormRequest
         return [
             'q' => ['sometimes', 'string', 'min:2', 'max:100'],
             'department' => ['sometimes', 'string', 'exists:departments,code'],
+            'region' => ['sometimes', 'string', 'exists:regions,code'], // EF-01.2
+
             'city' => ['sometimes', 'string', 'max:100'],
             'postal_code' => ['sometimes', 'string', 'max:5'],
             'naf' => ['sometimes', 'string', 'max:6'],

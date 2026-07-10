@@ -99,11 +99,16 @@ export default function EstablishmentPage() {
               value={e.contact.email}
               href={e.contact.email ? `mailto:${e.contact.email}` : undefined}
             />
+            <Row label="Horaires" value={e.opening_hours?.raw ?? null} />
+            {Object.entries(e.social_links ?? {}).map(([network, url]) => (
+              <Row
+                key={network}
+                label={network.charAt(0).toUpperCase() + network.slice(1)}
+                value={url}
+                href={url}
+              />
+            ))}
           </dl>
-          <p className="mt-3 text-xs text-slate-400">
-            Enrichissement OSM et web : phase 4 —{' '}
-            {e.enriched_at ? `dernier enrichissement ${e.enriched_at}` : 'pas encore enrichi'}
-          </p>
         </section>
 
         <section className="rounded-xl border border-slate-200 bg-white p-4">
@@ -122,6 +127,42 @@ export default function EstablishmentPage() {
               value={e.rating !== null ? `${e.rating}/5 (${e.reviews_count} avis, ${e.rating_source})` : 'Non renseignée'}
             />
           </dl>
+        </section>
+
+        <section className="rounded-xl border border-slate-200 bg-white p-4 md:col-span-2">
+          <h2 className="text-sm font-semibold text-slate-900">Collecte des données</h2>
+          <dl className="mt-2 space-y-1.5 text-sm">
+            <Row
+              label="Importé (SIRENE)"
+              value={e.imported_at ? new Date(e.imported_at).toLocaleDateString('fr-FR') : null}
+            />
+            <Row
+              label="Enrichi (OSM)"
+              value={e.enriched_at ? new Date(e.enriched_at).toLocaleDateString('fr-FR') : null}
+            />
+            <Row
+              label="Site crawlé"
+              value={e.crawled_at ? new Date(e.crawled_at).toLocaleDateString('fr-FR') : null}
+            />
+          </dl>
+          {e.coordinates && (
+            <p className="mt-3 text-sm">
+              <Link
+                to={`/carte?lat=${e.coordinates.latitude}&lng=${e.coordinates.longitude}&zoom=18`}
+                className="font-medium text-sky-700 hover:underline"
+              >
+                Voir sur la carte
+              </Link>
+              <a
+                href={`https://www.openstreetmap.org/?mlat=${e.coordinates.latitude}&mlon=${e.coordinates.longitude}#map=19/${e.coordinates.latitude}/${e.coordinates.longitude}`}
+                target="_blank"
+                rel="noreferrer"
+                className="ml-4 text-sky-700 hover:underline"
+              >
+                Ouvrir dans OpenStreetMap
+              </a>
+            </p>
+          )}
         </section>
       </div>
     </div>

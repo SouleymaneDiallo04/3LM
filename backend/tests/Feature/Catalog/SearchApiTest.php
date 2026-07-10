@@ -95,6 +95,30 @@ it('recherche par rayon géographique via l\'API (EF-01.3)', function (): void {
         ->assertUnprocessable();
 });
 
+it('recherche par région via le référentiel (EF-01.2)', function (): void {
+    // 75 → Île-de-France (11) ; 69 → Auvergne-Rhône-Alpes (84).
+    $idf = $this->actingAs($this->commercial)->getJson('/api/v1/companies?region=11');
+    expect($idf->json('data'))->toHaveCount(1)
+        ->and($idf->json('data.0.siret'))->toBe('11111111100011');
+
+    // Région inconnue : rejetée par la validation.
+    $this->actingAs($this->commercial)
+        ->getJson('/api/v1/companies?region=99')
+        ->assertUnprocessable();
+});
+
+it('sert le référentiel régions + départements pour les filtres', function (): void {
+    $response = $this->actingAs($this->commercial)->getJson('/api/v1/referentiels');
+
+    $response->assertOk();
+    $regions = collect($response->json('data.regions'));
+    expect($regions->count())->toBeGreaterThanOrEqual(18);
+
+    $idf = $regions->firstWhere('code', '11');
+    expect($idf['name'])->not->toBeNull()
+        ->and(collect($idf['departments'])->pluck('code'))->toContain('75');
+});
+
 it('recherche textuelle insensible aux accents et à la casse (EF-01.1)', function (): void {
     $response = $this->actingAs($this->commercial)
         ->getJson('/api/v1/companies?q='.urlencode('BOULANGÈRIE'));

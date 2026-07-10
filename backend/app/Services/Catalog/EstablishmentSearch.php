@@ -44,6 +44,12 @@ class EstablishmentSearch
         });
 
         $query->when($filters['department'] ?? null, fn ($q, $v) => $q->where('department_code', $v));
+        // Région (EF-01.2) : l'union de ses départements — les provinces du
+        // CDC belge sont transposées régions/départements (pivot France).
+        $query->when($filters['region'] ?? null, fn ($q, $v) => $q->whereIn(
+            'department_code',
+            fn ($sub) => $sub->select('code')->from('departments')->where('region_code', $v),
+        ));
         $query->when($filters['city'] ?? null, fn ($q, $v) => $q->where('city', 'ILIKE', $v));
         $query->when($filters['postal_code'] ?? null, fn ($q, $v) => $q->where('postal_code', $v));
         // NAF : code exact (5 car.) ou préfixe de division (2-4 car., EF-01.1).

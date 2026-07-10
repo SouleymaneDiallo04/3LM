@@ -44,6 +44,18 @@ export async function getFacets(filters: SearchFilters): Promise<{
   return data.data
 }
 
+/** Référentiel régions/départements (EF-01.2), donnée froide. */
+export interface RegionRef {
+  code: string
+  name: string
+  departments: { code: string; name: string }[]
+}
+
+export async function getReferentials(): Promise<RegionRef[]> {
+  const { data } = await api.get('/referentiels')
+  return data.data.regions
+}
+
 /** Filtres sauvegardés et partagés (EF-03.4). */
 export interface SavedFilter {
   id: number

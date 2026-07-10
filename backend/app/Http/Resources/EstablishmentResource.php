@@ -46,6 +46,8 @@ class EstablishmentResource extends JsonResource
                 'website' => $this->website,
                 'email' => $this->email,
             ],
+            'opening_hours' => $this->opening_hours,
+            'social_links' => $this->social_links,
             'rating' => $this->rating !== null ? (float) $this->rating : null,
             'reviews_count' => $this->reviews_count,
             'rating_source' => $this->rating_source,
@@ -61,6 +63,7 @@ class EstablishmentResource extends JsonResource
             ]),
             'imported_at' => $this->imported_at?->toIso8601String(),
             'enriched_at' => $this->enriched_at?->toIso8601String(),
+            'crawled_at' => $this->crawled_at?->toIso8601String(),
         ];
     }
 }

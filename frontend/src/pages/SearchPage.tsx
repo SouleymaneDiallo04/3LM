@@ -3,9 +3,11 @@ import { Link, useSearchParams } from 'react-router'
 import {
   deleteSavedFilter,
   getFacets,
+  getReferentials,
   listSavedFilters,
   saveFilter,
   searchEstablishments,
+  type RegionRef,
   type SavedFilter,
 } from '../features/catalog/api'
 import { createExport, downloadExport, getExport } from '../features/exports/api'
@@ -27,6 +29,12 @@ export default function SearchPage() {
     naf_divisions: { code: string; count: number }[]
   } | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Référentiel régions (EF-01.2) pour le filtre géographique.
+  const [regions, setRegions] = useState<RegionRef[]>([])
+  useEffect(() => {
+    getReferentials().then(setRegions).catch(() => setRegions([]))
+  }, [])
 
   // Filtres sauvegardés et partagés (EF-03.4).
   const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([])
@@ -158,12 +166,35 @@ export default function SearchPage() {
           />
         </label>
         <label className="text-sm">
+          <span className="text-slate-600">Région</span>
+          <select
+            value={filters.region ?? ''}
+            onChange={(e) => set({ region: e.target.value || undefined })}
+            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+          >
+            <option value="">Toutes</option>
+            {regions.map((r) => (
+              <option key={r.code} value={r.code}>{r.name}</option>
+            ))}
+          </select>
+        </label>
+        <label className="text-sm">
           <span className="text-slate-600">Département</span>
           <input
             type="text"
             value={filters.department ?? ''}
             onChange={(e) => set({ department: e.target.value })}
             placeholder="33, 75, 2A…"
+            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+          />
+        </label>
+        <label className="text-sm">
+          <span className="text-slate-600">Code postal</span>
+          <input
+            type="text"
+            value={filters.postal_code ?? ''}
+            onChange={(e) => set({ postal_code: e.target.value || undefined })}
+            placeholder="33000"
             className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           />
         </label>
@@ -284,6 +315,22 @@ export default function SearchPage() {
         <p role="alert" className="mt-3 text-sm text-red-600">
           {error}
         </p>
+      )}
+
+      {/* La recherche peut prendre quelques secondes : l'attente est montrée,
+          jamais silencieuse (« rien ne s'affiche » = bug). */}
+      {loading && (
+        <div
+          role="status"
+          className="mt-4 rounded-xl border border-slate-200 bg-white p-4"
+        >
+          <p className="text-sm font-medium text-slate-700">Recherche en cours…</p>
+          <div className="mt-3 animate-pulse space-y-2">
+            <div className="h-3 w-2/3 rounded bg-slate-100" />
+            <div className="h-3 w-1/2 rounded bg-slate-100" />
+            <div className="h-3 w-3/5 rounded bg-slate-100" />
+          </div>
+        </div>
       )}
 
       {filters.radius_km !== undefined && (

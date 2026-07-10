@@ -21,6 +21,8 @@ export interface Establishment {
     website: string | null
     email: string | null
   }
+  opening_hours?: { raw?: string; source?: string } | null
+  social_links?: Record<string, string> | null
   rating: number | null
   reviews_count: number | null
   rating_source: string | null
@@ -36,6 +38,7 @@ export interface Establishment {
   }
   imported_at: string | null
   enriched_at: string | null
+  crawled_at?: string | null
 }
 
 /** Réponse paginée par curseur (§9.2). */
@@ -48,6 +51,7 @@ export interface CursorPage<T> {
 /** Critères de recherche (EF-01, EF-03.1a). */
 export interface SearchFilters {
   q?: string
+  region?: string
   department?: string
   city?: string
   postal_code?: string

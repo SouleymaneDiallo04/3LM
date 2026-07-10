@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\EstablishmentController;
 use App\Http\Controllers\Api\V1\ExportController;
 use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Controllers\Api\V1\ReferentialController;
 use App\Http\Controllers\Api\V1\SavedFilterController;
 use App\Http\Controllers\Api\V1\SearchHistoryController;
 use App\Http\Controllers\Api\V1\StatisticsController;
@@ -57,6 +58,10 @@ Route::prefix('v1')->group(function (): void {
                 ->name('companies.map');
             Route::get('companies/{establishment}', [EstablishmentController::class, 'show'])
                 ->name('companies.show');
+
+            // Référentiel régions/départements pour les filtres (EF-01.2).
+            Route::get('referentiels', [ReferentialController::class, 'index'])
+                ->name('referentiels');
 
             // Historique des recherches (EF-01.6).
             Route::get('searches', [SearchHistoryController::class, 'index'])->name('searches.index');
