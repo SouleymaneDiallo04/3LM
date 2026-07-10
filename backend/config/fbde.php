@@ -21,4 +21,8 @@ return [
     // Périmètre de l'import planifié : un département (ex. « 33 ») en
     // environnement contraint, null = France entière.
     'import_department' => env('FBDE_IMPORT_DEPARTMENT'),
+
+    // Enrichissement OSM (§5.4) : instance Overpass — auto-héberger en
+    // production (politique d'usage des instances publiques).
+    'overpass_api' => env('FBDE_OVERPASS_API', 'https://overpass-api.de/api/interpreter'),
 ];
