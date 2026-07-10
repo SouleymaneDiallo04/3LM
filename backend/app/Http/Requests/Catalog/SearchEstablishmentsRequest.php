@@ -15,6 +15,17 @@ class SearchEstablishmentsRequest extends FormRequest
         return true; // l'autorisation est portée par la permission companies.view
     }
 
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return [
+            'department.exists' => 'Département inconnu — utilisez le code INSEE (ex. 33, 75, 2A).',
+            'region.exists' => 'Région inconnue.',
+            'min_rating.between' => 'La note minimale doit être comprise entre 1 et 5.',
+            'radius_km.between' => 'Le rayon doit être compris entre 1 et 100 km.',
+        ];
+    }
+
     /** @return array<string, array<int, string>> */
     public function rules(): array
     {

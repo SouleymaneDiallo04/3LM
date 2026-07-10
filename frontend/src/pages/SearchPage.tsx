@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios'
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import {
@@ -65,8 +66,12 @@ export default function SearchPage() {
       if (!cursorUrl) {
         getFacets(criteria).then(setFacets).catch(() => setFacets(null))
       }
-    } catch {
-      setError('La recherche a échoué. Vérifiez les critères et réessayez.')
+    } catch (err) {
+      // 422 : montrer les messages de validation réels, pas un générique.
+      const validation = isAxiosError(err) && err.response?.status === 422
+        ? Object.values(err.response.data.errors ?? {}).flat().join(' ')
+        : null
+      setError(validation || 'La recherche a échoué. Vérifiez les critères et réessayez.')
     } finally {
       setLoading(false)
     }
@@ -189,7 +194,7 @@ export default function SearchPage() {
           <span className="text-slate-600">Région</span>
           <select
             value={filters.region ?? ''}
-            onChange={(e) => set({ region: e.target.value || undefined })}
+            onChange={(e) => set({ region: e.target.value || undefined, department: undefined })}
             className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           >
             <option value="">Toutes</option>
@@ -200,13 +205,19 @@ export default function SearchPage() {
         </label>
         <label className="text-sm">
           <span className="text-slate-600">Département</span>
-          <input
-            type="text"
+          <select
             value={filters.department ?? ''}
-            onChange={(e) => set({ department: e.target.value })}
-            placeholder="33, 75, 2A…"
+            onChange={(e) => set({ department: e.target.value || undefined })}
             className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
-          />
+          >
+            <option value="">Tous</option>
+            {(filters.region
+              ? regions.filter((r) => r.code === filters.region)
+              : regions
+            ).flatMap((r) => r.departments).map((d) => (
+              <option key={d.code} value={d.code}>{d.code} — {d.name}</option>
+            ))}
+          </select>
         </label>
         <label className="text-sm">
           <span className="text-slate-600">Code postal</span>

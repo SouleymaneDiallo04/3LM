@@ -124,6 +124,11 @@ it('normalise les éléments Overpass : tags contact:*, centre des ways', functi
     $connector = new OverpassConnector(app(NameNormalizer::class), '33');
     $pois = iterator_to_array($connector->pois(), false);
 
+    // Client identifié : la politique Overpass rejette les UA anonymes (406).
+    Http::assertSent(fn ($request): bool => str_contains(
+        $request->header('User-Agent')[0] ?? '', 'FBDEBot',
+    ));
+
     expect($pois)->toHaveCount(2)
         ->and($pois[0]['phone'])->toBe('+33 5 56 12 34 56')
         ->and($pois[0]['website'])->toBe('https://boulangerie-dupont.fr') // schéma ajouté

@@ -34,7 +34,9 @@ class OverpassConnector implements PoiConnector
             out center tags;
             OVERPASS, $this->department);
 
+        // L'instance publique Overpass exige un client identifié (406 sinon).
         $elements = Http::timeout(900)
+            ->withHeaders(['User-Agent' => 'FBDEBot/1.0 (enrichissement B2B ; respecte la politique Overpass)'])
             ->asForm()
             ->post(config('fbde.overpass_api'), ['data' => $query])
             ->throw()
