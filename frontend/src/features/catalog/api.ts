@@ -32,6 +32,18 @@ export async function fetchMapData(
   return data.data
 }
 
+/** Facettes du résultat courant (EF-03.3) : compteurs département + NAF. */
+export async function getFacets(filters: SearchFilters): Promise<{
+  departments: { code: string; count: number }[]
+  naf_divisions: { code: string; count: number }[]
+}> {
+  const params = Object.fromEntries(
+    Object.entries(filters).filter(([, v]) => v !== undefined && v !== '' && v !== null),
+  )
+  const { data } = await api.get('/companies/facets', { params })
+  return data.data
+}
+
 /** Fiche complète d'un établissement. */
 export async function getEstablishment(id: number | string): Promise<Establishment> {
   const { data } = await api.get(`/companies/${id}`)

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router'
-import { searchEstablishments } from '../features/catalog/api'
+import { getFacets, searchEstablishments } from '../features/catalog/api'
 import { createExport, downloadExport, getExport } from '../features/exports/api'
 import type { CursorPage, Establishment, ExportStatus, SearchFilters } from '../lib/types'
 
@@ -15,6 +15,10 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [exportJob, setExportJob] = useState<ExportStatus | null>(null)
+  const [facets, setFacets] = useState<{
+    departments: { code: string; count: number }[]
+    naf_divisions: { code: string; count: number }[]
+  } | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const runSearch = useCallback(async (criteria: SearchFilters, cursorUrl?: string | null) => {
@@ -23,6 +27,11 @@ export default function SearchPage() {
     try {
       setPage(await searchEstablishments(criteria, cursorUrl))
       setApplied(criteria)
+      // Facettes (EF-03.3) : compteurs du résultat courant — pas re-calculées
+      // au fil des pages, uniquement sur la requête initiale.
+      if (!cursorUrl) {
+        getFacets(criteria).then(setFacets).catch(() => setFacets(null))
+      }
     } catch {
       setError('La recherche a échoué. Vérifiez les critères et réessayez.')
     } finally {
@@ -207,6 +216,46 @@ export default function SearchPage() {
             Retirer le rayon
           </button>
         </p>
+      )}
+
+      {page && facets && (facets.departments.length > 0 || facets.naf_divisions.length > 0) && (
+        <div className="mt-4 space-y-2 rounded-xl border border-slate-200 bg-white p-3">
+          {(
+            [
+              ['Départements', 'department', facets.departments],
+              ['Divisions NAF', 'naf', facets.naf_divisions],
+            ] as const
+          ).map(([title, key, values]) => (
+            values.length > 0 && (
+              <div key={key} className="flex flex-wrap items-center gap-1.5">
+                <span className="mr-1 text-xs font-semibold uppercase text-slate-500">
+                  {title}
+                </span>
+                {values.map(({ code, count }) => {
+                  const active = applied?.[key] === code
+                  return (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => {
+                        const next = { ...(applied ?? filters), [key]: active ? undefined : code }
+                        setFilters(next)
+                        void runSearch(next)
+                      }}
+                      className={`rounded-full border px-2.5 py-0.5 text-xs ${
+                        active
+                          ? 'border-blue-600 bg-blue-50 font-semibold text-blue-700'
+                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      {code} · {count.toLocaleString('fr-FR')}
+                    </button>
+                  )
+                })}
+              </div>
+            )
+          ))}
+        </div>
       )}
 
       {page && (
