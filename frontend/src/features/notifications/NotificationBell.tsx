@@ -33,16 +33,16 @@ export default function NotificationBell() {
   }
 
   return (
-    <div className="relative border-t border-slate-200 px-2 py-2">
+    <div className="relative border-t border-white/10 px-2 py-2">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+        className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-slate-400 transition-colors duration-150 hover:bg-white/5 hover:text-slate-200"
       >
         Notifications
         {unread > 0 && (
-          <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs font-semibold text-white">
+          <span className="rounded-full bg-sky-700 px-2 py-0.5 text-xs font-semibold text-white">
             {unread}
           </span>
         )}
@@ -56,7 +56,7 @@ export default function NotificationBell() {
               <button
                 type="button"
                 onClick={() => void markAllRead()}
-                className="text-xs text-blue-600 hover:underline"
+                className="text-xs text-sky-700 hover:underline"
               >
                 Tout marquer lu
               </button>
@@ -67,7 +67,7 @@ export default function NotificationBell() {
               <li
                 key={n.id}
                 className={`border-b border-slate-100 px-3 py-2 text-sm ${
-                  n.read_at === null ? 'bg-blue-50/50' : ''
+                  n.read_at === null ? 'bg-sky-50/60' : ''
                 }`}
               >
                 <p className="text-slate-800">{label(n)}</p>

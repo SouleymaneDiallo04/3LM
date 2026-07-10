@@ -37,21 +37,50 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            FBDE
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            France Business Data Extractor
-          </p>
+    <main className="flex min-h-screen bg-slate-50">
+      {/* Panneau de marque : visible dès md — le formulaire reste seul sur mobile. */}
+      <section className="hidden w-1/2 flex-col justify-between bg-slate-900 p-10 md:flex">
+        <div>
+          <p className="text-xl font-bold tracking-tight text-white">FBDE</p>
+          <p className="text-sm text-slate-400">France Business Data Extractor</p>
         </div>
+        <div className="max-w-md">
+          <h1 className="text-3xl font-semibold leading-snug text-white [text-wrap:balance]">
+            Toute la base SIRENE, prête pour la prospection.
+          </h1>
+          <dl className="mt-8 grid grid-cols-3 gap-6 border-t border-white/10 pt-6">
+            <div>
+              <dt className="text-xs text-slate-400">Établissements</dt>
+              <dd className="mt-1 font-mono text-lg font-semibold tabular-nums text-white">1,04 M</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-slate-400">Géolocalisés</dt>
+              <dd className="mt-1 font-mono text-lg font-semibold tabular-nums text-white">99,2 %</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-slate-400">Recherche</dt>
+              <dd className="mt-1 font-mono text-lg font-semibold tabular-nums text-white">&lt; 1 s</dd>
+            </div>
+          </dl>
+        </div>
+        <p className="text-xs text-slate-500">
+          Données SIRENE/INSEE · cartographie OpenStreetMap
+        </p>
+      </section>
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
-        >
+      <section className="flex flex-1 items-center justify-center px-4 py-12">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 md:hidden">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">FBDE</h1>
+            <p className="mt-1 text-sm text-slate-500">France Business Data Extractor</p>
+          </div>
+
+          <h2 className="text-lg font-semibold text-slate-900">Connexion</h2>
+          <p className="mt-1 mb-6 text-sm text-slate-500">
+            Accédez à votre espace de prospection.
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
               htmlFor="email"
@@ -66,7 +95,7 @@ export default function LoginPage() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-xs focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-xs focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
             />
           </div>
 
@@ -84,7 +113,7 @@ export default function LoginPage() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-xs focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-xs focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
             />
           </div>
 
@@ -94,15 +123,16 @@ export default function LoginPage() {
             </p>
           )}
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-          >
-            {submitting ? 'Connexion…' : 'Se connecter'}
-          </button>
-        </form>
-      </div>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full rounded-md bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-sky-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 disabled:opacity-50"
+            >
+              {submitting ? 'Connexion…' : 'Se connecter'}
+            </button>
+          </form>
+        </div>
+      </section>
     </main>
   )
 }

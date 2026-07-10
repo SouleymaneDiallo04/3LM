@@ -28,7 +28,7 @@ export default function EstablishmentPage() {
 
   return (
     <div>
-      <Link to="/recherche" className="text-sm text-blue-600 hover:underline">
+      <Link to="/recherche" className="text-sm text-sky-700 hover:underline">
         ← Retour à la recherche
       </Link>
 
@@ -149,7 +149,7 @@ function Row({
               href={href}
               target="_blank"
               rel="noreferrer"
-              className="text-blue-600 hover:underline"
+              className="text-sky-700 hover:underline"
             >
               {value}
             </a>

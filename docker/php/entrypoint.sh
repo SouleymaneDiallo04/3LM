@@ -8,6 +8,10 @@
 set -e
 
 if [ "$(id -u)" = "0" ]; then
+    # Pré-créer les répertoires d'écriture applicative : Flysystem les crée
+    # sinon en 0700 au premier accès, propriété du process appelant — un
+    # artisan lancé en root rendrait exports/ inaccessible aux workers app.
+    mkdir -p storage/app/private/exports storage/app/sirene 2>/dev/null || true
     chmod -R ugo+rwX storage bootstrap/cache 2>/dev/null || true
     if [ "$1" = "php-fpm" ]; then
         exec "$@"

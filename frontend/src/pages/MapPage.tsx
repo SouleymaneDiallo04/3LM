@@ -121,12 +121,12 @@ function ClusteredPoints({ points, zoom }: { points: MapPoint[]; zoom: number })
         key={point.id}
         center={[lat, lng]}
         radius={6}
-        pathOptions={{ color: '#2563eb', weight: 1.5, fillColor: '#3b82f6', fillOpacity: 0.7 }}
+        pathOptions={{ color: '#0369a1', weight: 1.5, fillColor: '#0284c7', fillOpacity: 0.7 }}
       >
         <Popup>
           <p className="font-semibold">{point.name ?? 'Sans dénomination'}</p>
           <p className="font-mono text-xs">{point.siret}</p>
-          <Link to={`/entreprises/${point.id}`} className="text-blue-600 hover:underline">
+          <Link to={`/entreprises/${point.id}`} className="text-sky-700 hover:underline">
             Voir la fiche
           </Link>
         </Popup>
@@ -228,7 +228,7 @@ export default function MapPage() {
               value={filters.q ?? ''}
               onChange={(e) => set({ q: e.target.value || undefined })}
               placeholder="boulangerie…"
-              className="mt-1 block w-36 rounded-md border border-slate-300 px-2 py-1.5"
+              className="mt-1 block w-36 rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
             />
           </label>
           <label className="text-sm">
@@ -238,7 +238,7 @@ export default function MapPage() {
               value={filters.naf ?? ''}
               onChange={(e) => set({ naf: e.target.value || undefined })}
               placeholder="10.71C ou 45"
-              className="mt-1 block w-28 rounded-md border border-slate-300 px-2 py-1.5"
+              className="mt-1 block w-28 rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
             />
           </label>
           <label className="flex items-center gap-1.5 pb-2 text-sm text-slate-600">
@@ -252,7 +252,7 @@ export default function MapPage() {
           <button
             type="submit"
             disabled={loading}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-md bg-sky-700 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-800 disabled:opacity-50"
           >
             Filtrer
           </button>
@@ -276,14 +276,14 @@ export default function MapPage() {
             onClick={() => setPickingCenter((v) => !v)}
             className={`rounded-full border px-3 py-1 text-xs font-medium ${
               pickingCenter
-                ? 'border-blue-600 bg-blue-50 text-blue-700'
+                ? 'border-sky-700 bg-sky-50 text-sky-800'
                 : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
             }`}
           >
             {pickingCenter ? 'Cliquez sur la carte pour poser le centre' : 'Rayon de prospection'}
           </button>
         ) : (
-          <span className="flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs text-blue-800">
+          <span className="flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs text-sky-900">
             Rayon
             <input
               type="range"
@@ -297,14 +297,14 @@ export default function MapPage() {
             <button
               type="button"
               onClick={searchWithinRadius}
-              className="rounded bg-blue-600 px-2 py-0.5 font-semibold text-white hover:bg-blue-700"
+              className="rounded bg-sky-700 px-2 py-0.5 font-semibold text-white hover:bg-sky-800"
             >
               Rechercher dans ce rayon
             </button>
             <button
               type="button"
               onClick={() => setCenter(null)}
-              className="text-blue-700 hover:underline"
+              className="text-sky-800 hover:underline"
             >
               Retirer
             </button>
@@ -348,7 +348,7 @@ export default function MapPage() {
             <Circle
               center={[center.lat, center.lng]}
               radius={radiusKm * 1000}
-              pathOptions={{ color: '#2563eb', weight: 2, fillColor: '#3b82f6', fillOpacity: 0.08 }}
+              pathOptions={{ color: '#0369a1', weight: 2, fillColor: '#0284c7', fillOpacity: 0.08 }}
             />
           )}
         </MapContainer>

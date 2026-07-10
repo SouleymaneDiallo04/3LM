@@ -154,7 +154,7 @@ export default function SearchPage() {
             value={filters.q ?? ''}
             onChange={(e) => set({ q: e.target.value })}
             placeholder="boulangerie, garage…"
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5"
+            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           />
         </label>
         <label className="text-sm">
@@ -164,7 +164,7 @@ export default function SearchPage() {
             value={filters.department ?? ''}
             onChange={(e) => set({ department: e.target.value })}
             placeholder="33, 75, 2A…"
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5"
+            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           />
         </label>
         <label className="text-sm">
@@ -174,7 +174,7 @@ export default function SearchPage() {
             value={filters.city ?? ''}
             onChange={(e) => set({ city: e.target.value })}
             placeholder="BORDEAUX"
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5"
+            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           />
         </label>
         <label className="text-sm">
@@ -184,7 +184,7 @@ export default function SearchPage() {
             value={filters.naf ?? ''}
             onChange={(e) => set({ naf: e.target.value })}
             placeholder="10.71C ou 45"
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5"
+            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           />
         </label>
 
@@ -223,7 +223,7 @@ export default function SearchPage() {
                   direction: e.target.value === 'name' ? 'asc' : 'desc',
                 })
               }
-              className="rounded-md border border-slate-300 px-2 py-1"
+              className="rounded-md border border-slate-300 px-2 py-1 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
             >
               <option value="">Pertinence</option>
               <option value="name">Nom (A→Z)</option>
@@ -238,7 +238,7 @@ export default function SearchPage() {
           <button
             type="submit"
             disabled={loading}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-md bg-sky-700 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-800 disabled:opacity-50"
           >
             {loading ? 'Recherche…' : 'Rechercher'}
           </button>
@@ -250,7 +250,7 @@ export default function SearchPage() {
             <select
               value={selectedFilterId}
               onChange={(e) => applySavedFilter(e.target.value === '' ? '' : Number(e.target.value))}
-              className="rounded-md border border-slate-300 px-2 py-1"
+              className="rounded-md border border-slate-300 px-2 py-1 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
             >
               <option value="">—</option>
               {savedFilters.map((f) => (
@@ -288,13 +288,13 @@ export default function SearchPage() {
 
       {filters.radius_km !== undefined && (
         <p className="mt-3 flex items-center gap-2 text-sm text-slate-600">
-          <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs text-blue-800">
+          <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs text-sky-900">
             Rayon de {filters.radius_km} km autour du point choisi sur la carte
           </span>
           <button
             type="button"
             onClick={clearRadius}
-            className="text-xs text-blue-600 hover:underline"
+            className="text-xs text-sky-700 hover:underline"
           >
             Retirer le rayon
           </button>
@@ -327,7 +327,7 @@ export default function SearchPage() {
                       }}
                       className={`rounded-full border px-2.5 py-0.5 text-xs ${
                         active
-                          ? 'border-blue-600 bg-blue-50 font-semibold text-blue-700'
+                          ? 'border-sky-700 bg-sky-50 font-semibold text-sky-800'
                           : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                       }`}
                     >
@@ -355,7 +355,7 @@ export default function SearchPage() {
                     <button
                       type="button"
                       onClick={() => void downloadExport(exportJob)}
-                      className="ml-2 font-semibold text-blue-600 hover:underline"
+                      className="ml-2 font-semibold text-sky-700 hover:underline"
                     >
                       Télécharger ({exportJob.rows_count} lignes)
                     </button>
@@ -386,7 +386,7 @@ export default function SearchPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-xs uppercase text-slate-500">
+                <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                   <th className="px-4 py-2">Nom</th>
                   <th className="px-4 py-2">SIRET</th>
                   <th className="px-4 py-2">NAF</th>
@@ -396,11 +396,11 @@ export default function SearchPage() {
               </thead>
               <tbody>
                 {page.data.map((e) => (
-                  <tr key={e.id} className="border-b border-slate-100 hover:bg-slate-50">
+                  <tr key={e.id} className="border-b border-slate-100 transition-colors duration-150 hover:bg-sky-50/40">
                     <td className="px-4 py-2">
                       <Link
                         to={`/entreprises/${e.id}`}
-                        className="font-medium text-blue-700 hover:underline"
+                        className="font-medium text-sky-800 hover:underline"
                       >
                         {e.name ?? e.company?.legal_name ?? '—'}
                       </Link>
@@ -443,7 +443,7 @@ export default function SearchPage() {
               type="button"
               disabled={!page.links.prev || loading}
               onClick={() => applied && void runSearch(applied, page.links.prev)}
-              className="text-sm text-blue-600 hover:underline disabled:text-slate-300"
+              className="text-sm text-sky-700 hover:underline disabled:text-slate-300"
             >
               ← Précédent
             </button>
@@ -451,7 +451,7 @@ export default function SearchPage() {
               type="button"
               disabled={!page.links.next || loading}
               onClick={() => applied && void runSearch(applied, page.links.next)}
-              className="text-sm text-blue-600 hover:underline disabled:text-slate-300"
+              className="text-sm text-sky-700 hover:underline disabled:text-slate-300"
             >
               Suivant →
             </button>

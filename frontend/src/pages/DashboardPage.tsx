@@ -12,7 +12,7 @@ import { useAuth } from '../features/auth/AuthContext'
 import { getStatistics, type DashboardStatistics } from '../features/statistics/api'
 
 /** Teinte unique validée (série unique — pas de légende nécessaire). */
-const BAR_COLOR = '#2563eb'
+const BAR_COLOR = '#0369a1'
 
 /**
  * Tableau de bord (EF-06.1, EF-06.2, EF-06.4) : KPI, complétude,
@@ -65,9 +65,11 @@ export default function DashboardPage() {
 
       <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
         {tiles.map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-slate-200 bg-white p-4">
+          <div key={label} className="rounded-lg border border-slate-200 bg-white px-4 py-3">
             <p className="text-xs text-slate-500">{label}</p>
-            <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{value}</p>
+            <p className="mt-1 font-mono text-xl font-semibold tabular-nums text-slate-900">
+              {value}
+            </p>
           </div>
         ))}
       </div>

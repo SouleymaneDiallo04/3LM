@@ -1,6 +1,25 @@
+/* Polices auto-hébergées (pas de CDN — même politique que les tuiles). */
+@import '@fontsource/fira-sans/400.css';
+@import '@fontsource/fira-sans/500.css';
+@import '@fontsource/fira-sans/600.css';
+@import '@fontsource/fira-sans/700.css';
+@import '@fontsource/fira-code/400.css';
+@import '@fontsource/fira-code/600.css';
+
 @import "tailwindcss";
 
-/* Agrégats de la carte (EF-06.3) : disque bleu, compteur centré.
+/*
+ * Design system FBDE — « Data-Dense Dashboard » :
+ * interface Fira Sans, données tabulaires Fira Code (SIRET, compteurs),
+ * accent sky-700 (#0369a1) réservé aux actions et à la sélection,
+ * navy slate-900 pour la barre latérale.
+ */
+@theme {
+  --font-sans: 'Fira Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Fira Code', ui-monospace, 'Cascadia Mono', monospace;
+}
+
+/* Agrégats de la carte (EF-06.3) : disque accent, compteur centré.
    Défini ici car injecté par Leaflet via divIcon, hors du scan Tailwind. */
 .fbde-cluster div {
   display: flex;
@@ -9,10 +28,11 @@
   width: 100%;
   height: 100%;
   border-radius: 9999px;
-  background: rgb(37 99 235 / 0.85); /* blue-600 */
+  background: rgb(3 105 161 / 0.88); /* sky-700 */
   border: 2px solid #fff;
   color: #fff;
   font-size: 0.75rem;
   font-weight: 600;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 1px 3px rgb(2 6 23 / 0.35);
 }

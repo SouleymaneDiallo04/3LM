@@ -89,7 +89,7 @@ export default function UsersPage() {
             required
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5"
+            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           />
         </label>
         <label className="text-sm">
@@ -99,7 +99,7 @@ export default function UsersPage() {
             required
             value={form.email}
             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5"
+            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           />
         </label>
         <label className="text-sm">
@@ -110,7 +110,7 @@ export default function UsersPage() {
             minLength={12}
             value={form.password}
             onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5"
+            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           />
         </label>
         <label className="text-sm">
@@ -118,7 +118,7 @@ export default function UsersPage() {
           <select
             value={form.role}
             onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5"
+            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           >
             {ROLES.map((r) => (
               <option key={r} value={r}>{r}</option>
@@ -128,7 +128,7 @@ export default function UsersPage() {
         <button
           type="submit"
           disabled={creating}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded-md bg-sky-700 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-800 disabled:opacity-50"
         >
           {creating ? 'Création…' : 'Créer le compte'}
         </button>
@@ -141,7 +141,7 @@ export default function UsersPage() {
       <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-xs uppercase text-slate-500">
+            <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
               <th className="px-4 py-2">Nom</th>
               <th className="px-4 py-2">Email</th>
               <th className="px-4 py-2">Rôle</th>

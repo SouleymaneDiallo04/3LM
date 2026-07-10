@@ -68,7 +68,7 @@ export default function TwoFactorPage() {
               inputMode="text"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-center font-mono text-lg tracking-widest shadow-xs focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-center font-mono text-lg tracking-widest shadow-xs focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
             />
           </div>
 
@@ -81,7 +81,7 @@ export default function TwoFactorPage() {
           <button
             type="submit"
             disabled={submitting || code.trim() === ''}
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+            className="w-full rounded-md bg-sky-700 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-800 disabled:opacity-50"
           >
             {submitting ? 'Vérification…' : 'Vérifier'}
           </button>
