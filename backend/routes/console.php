@@ -2,7 +2,22 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+/*
+|--------------------------------------------------------------------------
+| Tâches planifiées (§2.1, EF-07.4)
+|--------------------------------------------------------------------------
+| Le conteneur horizon exécute schedule:work ; les heures sont en UTC.
+*/
+
+// Liens d'export morts à 7 jours → fichiers purgés chaque nuit.
+Schedule::command('fbde:exports:purge')->dailyAt('03:00');
+
+// Stock SIRENE publié par l'INSEE en début de mois → re-import le 5 à 2 h
+// (sans chevauchement : l'import national dure plusieurs heures).
+Schedule::command('fbde:sirene:refresh')->monthlyOn(5, '02:00')->withoutOverlapping();

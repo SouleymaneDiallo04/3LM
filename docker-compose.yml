@@ -32,6 +32,24 @@ services:
         condition: service_started
     networks: [fbde]
 
+  # Tâches planifiées (§2.1, EF-07.4) : purge des exports expirés chaque
+  # nuit, re-import mensuel du stock SIRENE.
+  scheduler:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: fbde_scheduler
+    working_dir: /var/www/html
+    command: php artisan schedule:work
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks: [fbde]
+
   nginx:
     image: nginx:1.27-alpine
     container_name: fbde_nginx
