@@ -1,16 +1,27 @@
 import { divIcon, type Map as LeafletMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
-import { CircleMarker, Circle, MapContainer, Marker, Popup, TileLayer, useMapEvents } from 'react-leaflet'
+import {
+  CircleMarker,
+  Circle,
+  MapContainer,
+  Marker,
+  Popup,
+  TileLayer,
+  useMap,
+  useMapEvents,
+} from 'react-leaflet'
+import Supercluster from 'supercluster'
 import { fetchMapData } from '../features/catalog/api'
-import type { MapData, SearchFilters } from '../lib/types'
+import type { MapData, MapPoint, SearchFilters } from '../lib/types'
 
 /**
  * Carte interactive (EF-06.3, correctif 16) : chargement par emprise visible,
- * plafonné côté serveur — points individuels zoomé, agrégats par cellule
- * dézoomé. Le mode « rayon de prospection » pose un centre au clic (EF-01.3)
- * et renvoie vers la recherche avec le rayon choisi.
+ * plafonné côté serveur — sous le plafond, clustering côté client
+ * (Supercluster) ; au-delà, agrégats par cellule calculés en SQL. Le mode
+ * « rayon de prospection » pose un centre au clic (EF-01.3) et renvoie vers
+ * la recherche avec le rayon choisi.
  */
 
 /** Emprise Leaflet → « minLon,minLat,maxLon,maxLat » borné aux limites WGS84. */
@@ -46,19 +57,82 @@ function MapEvents({
   onBounds,
   onPick,
 }: {
-  onBounds: (bbox: string) => void
+  onBounds: (bbox: string, zoom: number) => void
   onPick: ((lat: number, lng: number) => void) | null
 }) {
   const map = useMapEvents({
-    moveend: () => onBounds(toBbox(map)),
+    moveend: () => onBounds(toBbox(map), map.getZoom()),
     click: (e) => onPick?.(e.latlng.lat, e.latlng.lng),
   })
 
   useEffect(() => {
-    onBounds(toBbox(map))
+    onBounds(toBbox(map), map.getZoom())
   }, [map, onBounds])
 
   return null
+}
+
+/**
+ * Points sous le plafond : clustering côté client Supercluster
+ * (correctif 16). Un clic sur une grappe zoome jusqu'à son éclatement ;
+ * les points isolés gardent leur popup vers la fiche.
+ */
+function ClusteredPoints({ points, zoom }: { points: MapPoint[]; zoom: number }) {
+  const map = useMap()
+
+  const index = useMemo(() => {
+    // maxZoom 18 : en zone dense (SIRENE regorge d'adresses identiques),
+    // le mode points s'active vers z18 — le clustering doit y être actif ;
+    // z19 éclate tout.
+    const supercluster = new Supercluster<MapPoint>({ radius: 60, maxZoom: 18 })
+    supercluster.load(points.map((p) => ({
+      type: 'Feature' as const,
+      geometry: { type: 'Point' as const, coordinates: [p.longitude, p.latitude] },
+      properties: p,
+    })))
+    return supercluster
+  }, [points])
+
+  const features = index.getClusters([-180, -85, 180, 85], Math.round(zoom))
+
+  return features.map((feature) => {
+    const [lng, lat] = feature.geometry.coordinates
+
+    if ('cluster' in feature.properties && feature.properties.cluster) {
+      const clusterId = feature.properties.cluster_id
+      return (
+        <Marker
+          key={`grappe-${clusterId}`}
+          position={[lat, lng]}
+          icon={clusterIcon(feature.properties.point_count)}
+          eventHandlers={{
+            click: () => map.setView(
+              [lat, lng],
+              Math.min(index.getClusterExpansionZoom(clusterId), 19),
+            ),
+          }}
+        />
+      )
+    }
+
+    const point = feature.properties as MapPoint
+    return (
+      <CircleMarker
+        key={point.id}
+        center={[lat, lng]}
+        radius={6}
+        pathOptions={{ color: '#2563eb', weight: 1.5, fillColor: '#3b82f6', fillOpacity: 0.7 }}
+      >
+        <Popup>
+          <p className="font-semibold">{point.name ?? 'Sans dénomination'}</p>
+          <p className="font-mono text-xs">{point.siret}</p>
+          <Link to={`/entreprises/${point.id}`} className="text-blue-600 hover:underline">
+            Voir la fiche
+          </Link>
+        </Popup>
+      </CircleMarker>
+    )
+  })
 }
 
 export default function MapPage() {
@@ -74,6 +148,9 @@ export default function MapPage() {
   const [data, setData] = useState<MapData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Zoom courant : pilote le niveau de grappe Supercluster côté client.
+  const [zoom, setZoom] = useState(initialZoom)
 
   // Mode rayon (EF-01.3) : armé → le prochain clic pose le centre.
   const [pickingCenter, setPickingCenter] = useState(false)
@@ -105,8 +182,9 @@ export default function MapPage() {
   }, [])
 
   const handleBounds = useCallback(
-    (bbox: string) => {
+    (bbox: string, currentZoom: number) => {
       bboxRef.current = bbox
+      setZoom(currentZoom)
       void load(bbox, appliedRef.current)
     },
     [load],
@@ -244,32 +322,18 @@ export default function MapPage() {
         <MapContainer
           center={initialCenter}
           zoom={initialZoom}
+          maxZoom={19}
           preferCanvas
           className="h-full w-full"
         >
           <TileLayer
             attribution='&copy; les contributeurs d&apos;<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+            maxZoom={19}
           />
           <MapEvents onBounds={handleBounds} onPick={pickingCenter ? handlePick : null} />
 
-          {data?.mode === 'points' &&
-            data.points.map((p) => (
-              <CircleMarker
-                key={p.id}
-                center={[p.latitude, p.longitude]}
-                radius={6}
-                pathOptions={{ color: '#2563eb', weight: 1.5, fillColor: '#3b82f6', fillOpacity: 0.7 }}
-              >
-                <Popup>
-                  <p className="font-semibold">{p.name ?? 'Sans dénomination'}</p>
-                  <p className="font-mono text-xs">{p.siret}</p>
-                  <Link to={`/entreprises/${p.id}`} className="text-blue-600 hover:underline">
-                    Voir la fiche
-                  </Link>
-                </Popup>
-              </CircleMarker>
-            ))}
+          {data?.mode === 'points' && <ClusteredPoints points={data.points} zoom={zoom} />}
 
           {data?.mode === 'clusters' &&
             data.clusters.map((c, i) => (
