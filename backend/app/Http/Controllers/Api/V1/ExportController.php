@@ -25,7 +25,7 @@ class ExportController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'format' => ['required', 'in:csv,xlsx'],
+            'format' => ['required', 'in:csv,xlsx,json,xml,sql'], // EF-07.2
             'filters' => ['sometimes', 'array'],
             'columns' => ['sometimes', 'array', 'min:1'],
             'columns.*' => [Rule::in(ExportGenerator::availableColumns())],

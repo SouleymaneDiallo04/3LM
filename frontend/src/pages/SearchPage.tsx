@@ -9,7 +9,7 @@ import {
   type SavedFilter,
 } from '../features/catalog/api'
 import { createExport, downloadExport, getExport } from '../features/exports/api'
-import type { CursorPage, Establishment, ExportStatus, SearchFilters } from '../lib/types'
+import type { CursorPage, Establishment, ExportFormat, ExportStatus, SearchFilters } from '../lib/types'
 
 /**
  * Recherche multicritères (EF-01, EF-03.1a) : filtres combinables,
@@ -82,7 +82,7 @@ export default function SearchPage() {
     }
   }, [exportJob])
 
-  async function handleExport(format: 'csv' | 'xlsx') {
+  async function handleExport(format: ExportFormat) {
     if (!applied) return
     setExportJob(await createExport(format, applied))
   }
@@ -362,20 +362,24 @@ export default function SearchPage() {
                   )}
                 </span>
               )}
-              <button
-                type="button"
-                onClick={() => void handleExport('csv')}
-                className="rounded-md border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Export CSV
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleExport('xlsx')}
-                className="rounded-md border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Export Excel
-              </button>
+              {(
+                [
+                  ['csv', 'CSV'],
+                  ['xlsx', 'Excel'],
+                  ['json', 'JSON'],
+                  ['xml', 'XML'],
+                  ['sql', 'SQL'],
+                ] as const
+              ).map(([format, label]) => (
+                <button
+                  key={format}
+                  type="button"
+                  onClick={() => void handleExport(format)}
+                  className="rounded-md border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 

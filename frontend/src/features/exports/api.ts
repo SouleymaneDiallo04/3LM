@@ -1,9 +1,9 @@
 import { api } from '../../lib/api'
-import type { ExportStatus, SearchFilters } from '../../lib/types'
+import type { ExportFormat, ExportStatus, SearchFilters } from '../../lib/types'
 
-/** Crée un export asynchrone du résultat filtré courant (EF-07.1/07.4). */
+/** Crée un export asynchrone du résultat filtré courant (EF-07.1/07.2/07.4). */
 export async function createExport(
-  format: 'csv' | 'xlsx',
+  format: ExportFormat,
   filters: SearchFilters,
 ): Promise<ExportStatus> {
   const cleanFilters = Object.fromEntries(

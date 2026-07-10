@@ -112,10 +112,13 @@ export interface AppNotification {
   created_at: string
 }
 
+/** Formats d'export (EF-07.1, EF-07.2). */
+export type ExportFormat = 'csv' | 'xlsx' | 'json' | 'xml' | 'sql'
+
 /** Suivi d'un export asynchrone (EF-07). */
 export interface ExportStatus {
   id: number
-  format: 'csv' | 'xlsx'
+  format: ExportFormat
   status: 'pending' | 'running' | 'completed' | 'failed'
   rows_count: number | null
   expires_at: string | null
