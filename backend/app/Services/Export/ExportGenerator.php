@@ -160,7 +160,7 @@ class ExportGenerator
         $handle = fopen($absolute, 'wb');
 
         $columnList = implode(', ', array_map(fn (string $c): string => '"'.$c.'"', $columns));
-        fwrite($handle, "-- Export FBDE du ".now()->toIso8601String()."\n");
+        fwrite($handle, '-- Export FBDE du '.now()->toIso8601String()."\n");
         fwrite($handle, "CREATE TABLE IF NOT EXISTS etablissements (\n    "
             .implode(",\n    ", array_map(fn (string $c): string => '"'.$c.'" TEXT', $columns))
             ."\n);\n\n");
