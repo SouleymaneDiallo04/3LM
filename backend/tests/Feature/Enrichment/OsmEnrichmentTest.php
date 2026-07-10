@@ -113,7 +113,9 @@ it('normalise les éléments Overpass : tags contact:*, centre des ways', functi
                 ],
                 [
                     'type' => 'way', 'id' => 2, 'center' => ['lat' => 44.85, 'lon' => -0.57],
-                    'tags' => ['name' => 'Garage Rhône', 'phone' => '+33 5 56 11 11 11'],
+                    // OSM réel : plusieurs numéros séparés par « ; » — seul le
+                    // premier est retenu (colonne E.164, 20 caractères max).
+                    'tags' => ['name' => 'Garage Rhône', 'phone' => '+33 6 11 13 55 15;+33 5 24 22 09 06'],
                 ],
                 // Sans nom ni coordonnées : ignoré.
                 ['type' => 'node', 'id' => 3, 'lat' => 44.8, 'lon' => -0.6, 'tags' => ['phone' => 'x']],
@@ -134,6 +136,7 @@ it('normalise les éléments Overpass : tags contact:*, centre des ways', functi
         ->and($pois[0]['website'])->toBe('https://boulangerie-dupont.fr') // schéma ajouté
         ->and($pois[0]['normalized_name'])->toBe('boulangerie dupont')
         ->and($pois[1]['latitude'])->toBe(44.85) // centre du way
+        ->and($pois[1]['phone'])->toBe('+33 6 11 13 55 15') // premier numéro seul
         ->and($pois[1]['opening_hours'])->toBeNull();
 });
 

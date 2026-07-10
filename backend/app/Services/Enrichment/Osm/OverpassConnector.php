@@ -57,11 +57,26 @@ class OverpassConnector implements PoiConnector
                 'normalized_name' => $this->normalizer->normalize($name) ?? mb_strtolower($name),
                 'latitude' => (float) $latitude,
                 'longitude' => (float) $longitude,
-                'phone' => $tags['phone'] ?? $tags['contact:phone'] ?? null,
+                'phone' => $this->normalizePhone($tags['phone'] ?? $tags['contact:phone'] ?? null),
                 'website' => $this->normalizeUrl($tags['website'] ?? $tags['contact:website'] ?? null),
                 'opening_hours' => $tags['opening_hours'] ?? null,
             ];
         }
+    }
+
+    /**
+     * OSM porte parfois plusieurs numéros dans un tag (« ; ») : seul le
+     * premier est retenu — la colonne vise un E.164 (20 caractères max).
+     */
+    private function normalizePhone(?string $phone): ?string
+    {
+        if ($phone === null) {
+            return null;
+        }
+
+        $first = trim(explode(';', $phone)[0]);
+
+        return ($first !== '' && mb_strlen($first) <= 20) ? $first : null;
     }
 
     /** Les tags OSM omettent souvent le schéma — l'URL stockée est complète. */
