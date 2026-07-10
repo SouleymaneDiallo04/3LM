@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { isAxiosError } from 'axios'
+import BrandMark from '../components/BrandMark'
 import { useAuth } from '../features/auth/AuthContext'
 
 export default function LoginPage() {
@@ -40,9 +41,12 @@ export default function LoginPage() {
     <main className="flex min-h-screen bg-slate-50">
       {/* Panneau de marque : visible dès md — le formulaire reste seul sur mobile. */}
       <section className="hidden w-1/2 flex-col justify-between bg-slate-900 p-10 md:flex">
-        <div>
-          <p className="text-xl font-bold tracking-tight text-white">FBDE</p>
-          <p className="text-sm text-slate-400">France Business Data Extractor</p>
+        <div className="flex items-center gap-3">
+          <BrandMark size={36} />
+          <div>
+            <p className="text-xl font-bold leading-6 tracking-tight text-white">FBDE</p>
+            <p className="text-sm text-slate-400">France Business Data Extractor</p>
+          </div>
         </div>
         <div className="max-w-md">
           <h1 className="text-3xl font-semibold leading-snug text-white [text-wrap:balance]">
@@ -70,9 +74,12 @@ export default function LoginPage() {
 
       <section className="flex flex-1 items-center justify-center px-4 py-12">
         <div className="w-full max-w-sm">
-          <div className="mb-8 md:hidden">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">FBDE</h1>
-            <p className="mt-1 text-sm text-slate-500">France Business Data Extractor</p>
+          <div className="mb-8 flex items-center gap-3 md:hidden">
+            <BrandMark size={36} />
+            <div>
+              <h1 className="text-2xl font-bold leading-7 tracking-tight text-slate-900">FBDE</h1>
+              <p className="text-sm text-slate-500">France Business Data Extractor</p>
+            </div>
           </div>
 
           <h2 className="text-lg font-semibold text-slate-900">Connexion</h2>

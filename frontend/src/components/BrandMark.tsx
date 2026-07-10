@@ -1,0 +1,24 @@
+/**
+ * Marque FBDE : épingle de carte (le terrain) contenant trois barres
+ * ascendantes (la donnée qui monte) — accent sky-700, lisible à 16 px.
+ * Même dessin que public/favicon.svg ; les deux évoluent ensemble.
+ */
+export default function BrandMark({ size = 28 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 48 48"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M24 4 C15.2 4 8 11.2 8 20 c0 10.5 16 24 16 24 s16 -13.5 16 -24 C40 11.2 32.8 4 24 4 Z"
+        fill="#0369a1"
+      />
+      <rect x="16.6" y="19" width="3.6" height="7" rx="1.2" fill="#fff" />
+      <rect x="22.2" y="15.5" width="3.6" height="10.5" rx="1.2" fill="#fff" />
+      <rect x="27.8" y="12" width="3.6" height="14" rx="1.2" fill="#fff" />
+    </svg>
+  )
+}

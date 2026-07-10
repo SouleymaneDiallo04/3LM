@@ -1,4 +1,5 @@
 import { Navigate, NavLink, Outlet } from 'react-router'
+import BrandMark from '../components/BrandMark'
 import { useAuth } from '../features/auth/AuthContext'
 import NotificationBell from '../features/notifications/NotificationBell'
 
@@ -24,9 +25,12 @@ export default function AppLayout() {
   return (
     <div className="flex min-h-screen bg-slate-50">
       <aside className="flex w-56 flex-col bg-slate-900">
-        <div className="px-4 py-5">
-          <p className="text-lg font-bold tracking-tight text-white">FBDE</p>
-          <p className="text-xs text-slate-400">France Business Data Extractor</p>
+        <div className="flex items-center gap-2.5 px-4 py-5">
+          <BrandMark size={30} />
+          <div>
+            <p className="text-lg font-bold leading-5 tracking-tight text-white">FBDE</p>
+            <p className="text-[11px] text-slate-400">France Business Data Extractor</p>
+          </div>
         </div>
 
         <nav className="flex-1 space-y-0.5 px-2 py-2">
