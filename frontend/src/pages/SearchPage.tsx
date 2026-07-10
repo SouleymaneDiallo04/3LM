@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router'
-import { getFacets, searchEstablishments } from '../features/catalog/api'
+import {
+  deleteSavedFilter,
+  getFacets,
+  listSavedFilters,
+  saveFilter,
+  searchEstablishments,
+  type SavedFilter,
+} from '../features/catalog/api'
 import { createExport, downloadExport, getExport } from '../features/exports/api'
 import type { CursorPage, Establishment, ExportStatus, SearchFilters } from '../lib/types'
 
@@ -20,6 +27,22 @@ export default function SearchPage() {
     naf_divisions: { code: string; count: number }[]
   } | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Filtres sauvegardés et partagés (EF-03.4).
+  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([])
+  const [selectedFilterId, setSelectedFilterId] = useState<number | ''>('')
+
+  const refreshSavedFilters = useCallback(async () => {
+    try {
+      setSavedFilters(await listSavedFilters())
+    } catch {
+      // non bloquant : la recherche fonctionne sans les filtres sauvegardés
+    }
+  }, [])
+
+  useEffect(() => {
+    void refreshSavedFilters()
+  }, [refreshSavedFilters])
 
   const runSearch = useCallback(async (criteria: SearchFilters, cursorUrl?: string | null) => {
     setLoading(true)
@@ -65,6 +88,31 @@ export default function SearchPage() {
   }
 
   const set = (patch: Partial<SearchFilters>) => setFilters((f) => ({ ...f, ...patch }))
+
+  function applySavedFilter(id: number | '') {
+    setSelectedFilterId(id)
+    const saved = savedFilters.find((f) => f.id === id)
+    if (!saved) return
+    const next: SearchFilters = { status: 'active', ...saved.criteria }
+    setFilters(next)
+    void runSearch(next)
+  }
+
+  async function handleSaveFilter() {
+    const name = window.prompt('Nom du filtre sauvegardé :')
+    if (!name) return
+    const shared = window.confirm('Partager ce filtre avec toute l\'équipe ?\nOK = partagé, Annuler = privé.')
+    await saveFilter(name, applied ?? filters, shared)
+    void refreshSavedFilters()
+  }
+
+  async function handleDeleteFilter() {
+    const saved = savedFilters.find((f) => f.id === selectedFilterId)
+    if (!saved || !saved.is_owner) return
+    await deleteSavedFilter(saved.id)
+    setSelectedFilterId('')
+    void refreshSavedFilters()
+  }
 
   // Rayon posé depuis la carte (EF-01.3) : lat/lng/radius_km dans l'URL
   // pré-remplissent les critères et lancent la recherche à l'arrivée.
@@ -194,6 +242,41 @@ export default function SearchPage() {
           >
             {loading ? 'Recherche…' : 'Rechercher'}
           </button>
+        </div>
+
+        <div className="col-span-2 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 md:col-span-4">
+          <label className="flex items-center gap-1.5 text-sm text-slate-600">
+            Filtres sauvegardés
+            <select
+              value={selectedFilterId}
+              onChange={(e) => applySavedFilter(e.target.value === '' ? '' : Number(e.target.value))}
+              className="rounded-md border border-slate-300 px-2 py-1"
+            >
+              <option value="">—</option>
+              {savedFilters.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.name}
+                  {f.is_shared ? (f.is_owner ? ' (partagé)' : ` (par ${f.owner})`) : ''}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            onClick={() => void handleSaveFilter()}
+            className="rounded-md border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Sauvegarder ces critères
+          </button>
+          {savedFilters.find((f) => f.id === selectedFilterId)?.is_owner && (
+            <button
+              type="button"
+              onClick={() => void handleDeleteFilter()}
+              className="rounded-md border border-red-200 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+            >
+              Supprimer ce filtre
+            </button>
+          )}
         </div>
       </form>
 

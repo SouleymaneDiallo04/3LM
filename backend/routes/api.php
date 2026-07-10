@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\EstablishmentController;
 use App\Http\Controllers\Api\V1\ExportController;
 use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Controllers\Api\V1\SavedFilterController;
 use App\Http\Controllers\Api\V1\SearchHistoryController;
 use App\Http\Controllers\Api\V1\StatisticsController;
 use App\Http\Controllers\Api\V1\TwoFactorController;
@@ -59,6 +60,14 @@ Route::prefix('v1')->group(function (): void {
 
             // Historique des recherches (EF-01.6).
             Route::get('searches', [SearchHistoryController::class, 'index'])->name('searches.index');
+
+            // Filtres sauvegardés et partagés (EF-03.4).
+            Route::get('saved-filters', [SavedFilterController::class, 'index'])
+                ->name('saved-filters.index');
+            Route::post('saved-filters', [SavedFilterController::class, 'store'])
+                ->name('saved-filters.store');
+            Route::delete('saved-filters/{savedFilter}', [SavedFilterController::class, 'destroy'])
+                ->name('saved-filters.destroy');
         });
 
     // Agrégats du tableau de bord (§7, EF-06).

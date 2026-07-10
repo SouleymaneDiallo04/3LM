@@ -44,6 +44,33 @@ export async function getFacets(filters: SearchFilters): Promise<{
   return data.data
 }
 
+/** Filtres sauvegardés et partagés (EF-03.4). */
+export interface SavedFilter {
+  id: number
+  name: string
+  criteria: SearchFilters
+  is_shared: boolean
+  is_owner: boolean
+  owner: string
+}
+
+export async function listSavedFilters(): Promise<SavedFilter[]> {
+  const { data } = await api.get('/saved-filters')
+  return data.data
+}
+
+export async function saveFilter(
+  name: string,
+  criteria: SearchFilters,
+  isShared: boolean,
+): Promise<void> {
+  await api.post('/saved-filters', { name, criteria, is_shared: isShared })
+}
+
+export async function deleteSavedFilter(id: number): Promise<void> {
+  await api.delete(`/saved-filters/${id}`)
+}
+
 /** Fiche complète d'un établissement. */
 export async function getEstablishment(id: number | string): Promise<Establishment> {
   const { data } = await api.get(`/companies/${id}`)
