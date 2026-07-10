@@ -25,3 +25,8 @@ dist/
 # --- PHP / Laravel (garde-fou, le backend a son propre .gitignore) ---
 vendor/
 /backend/storage/*.key
+.gstack/
+
+# Playwright (§12.1)
+frontend/test-results/
+frontend/playwright-report/
