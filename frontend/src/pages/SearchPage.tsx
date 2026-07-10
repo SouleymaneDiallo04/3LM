@@ -4,11 +4,13 @@ import {
   deleteSavedFilter,
   getFacets,
   getReferentials,
+  getSearchHistory,
   listSavedFilters,
   saveFilter,
   searchEstablishments,
   type RegionRef,
   type SavedFilter,
+  type SearchHistoryEntry,
 } from '../features/catalog/api'
 import { createExport, downloadExport, getExport } from '../features/exports/api'
 import type { CursorPage, Establishment, ExportFormat, ExportStatus, SearchFilters } from '../lib/types'
@@ -120,6 +122,24 @@ export default function SearchPage() {
     await deleteSavedFilter(saved.id)
     setSelectedFilterId('')
     void refreshSavedFilters()
+  }
+
+  // Historique des recherches (EF-01.6) : chargé à l'ouverture du volet.
+  const [history, setHistory] = useState<SearchHistoryEntry[] | null>(null)
+
+  async function openHistory(open: boolean) {
+    if (!open) return
+    try {
+      setHistory(await getSearchHistory())
+    } catch {
+      setHistory([])
+    }
+  }
+
+  function replaySearch(entry: SearchHistoryEntry) {
+    const next: SearchFilters = { status: 'active', ...(entry.filters ?? {}) }
+    setFilters(next)
+    void runSearch(next)
   }
 
   // Rayon posé depuis la carte (EF-01.3) : lat/lng/radius_km dans l'URL
@@ -316,6 +336,54 @@ export default function SearchPage() {
           {error}
         </p>
       )}
+
+      <details
+        className="mt-3 rounded-xl border border-slate-200 bg-white"
+        onToggle={(e) => void openHistory((e.target as HTMLDetailsElement).open)}
+      >
+        <summary className="cursor-pointer px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+          Historique des recherches
+        </summary>
+        <div className="border-t border-slate-200">
+          {history === null && (
+            <p className="px-4 py-3 text-sm text-slate-500">Chargement…</p>
+          )}
+          {history?.length === 0 && (
+            <p className="px-4 py-3 text-sm text-slate-500">
+              Aucune recherche enregistrée pour le moment.
+            </p>
+          )}
+          {(history ?? []).map((entry) => (
+            <button
+              key={entry.id}
+              type="button"
+              onClick={() => replaySearch(entry)}
+              className="flex w-full items-center gap-4 border-b border-slate-100 px-4 py-2 text-left text-sm transition-colors duration-150 hover:bg-sky-50/40"
+            >
+              <span className="w-32 shrink-0 font-mono text-xs tabular-nums text-slate-500">
+                {new Date(entry.created_at).toLocaleString('fr-FR', {
+                  day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+                })}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-slate-800">
+                {[
+                  entry.keyword,
+                  entry.city,
+                  entry.department_code && `dépt ${entry.department_code}`,
+                  entry.radius_km && `rayon ${entry.radius_km} km`,
+                ]
+                  .filter(Boolean)
+                  .join(' · ') || 'Tous les établissements'}
+              </span>
+              {entry.results_count !== null && (
+                <span className="shrink-0 font-mono text-xs tabular-nums text-slate-500">
+                  {entry.results_count.toLocaleString('fr-FR')} rés.
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </details>
 
       {/* La recherche peut prendre quelques secondes : l'attente est montrée,
           jamais silencieuse (« rien ne s'affiche » = bug). */}

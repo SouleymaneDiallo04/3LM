@@ -85,3 +85,16 @@ it('planifie la purge quotidienne et le re-import mensuel', function (): void {
         ->and($refresh)->not->toBeNull()
         ->and($refresh->expression)->toBe('0 2 5 * *'); // le 5 de chaque mois à 2 h
 });
+
+it('planifie le re-crawl quotidien à fenêtre 90 jours et le rescoring (EF-05.5)', function (): void {
+    $events = collect(app(Schedule::class)->events());
+
+    $crawl = $events->first(fn ($e): bool => str_contains((string) $e->command, 'fbde:crawl'));
+    $score = $events->first(fn ($e): bool => str_contains((string) $e->command, 'fbde:score'));
+
+    expect($crawl)->not->toBeNull()
+        ->and($crawl->expression)->toBe('0 4 * * *') // chaque nuit à 4 h
+        ->and((string) $crawl->command)->toContain('--stale=90') // EF-05.5
+        ->and($score)->not->toBeNull()
+        ->and($score->expression)->toBe('0 5 * * *'); // après crawl et enrichissements
+});

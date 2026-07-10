@@ -56,6 +56,23 @@ export async function getReferentials(): Promise<RegionRef[]> {
   return data.data.regions
 }
 
+/** Historique des recherches (EF-01.6) : mot-clé, ville, département, rayon, date. */
+export interface SearchHistoryEntry {
+  id: number
+  keyword: string | null
+  city: string | null
+  department_code: string | null
+  radius_km: number | null
+  results_count: number | null
+  filters: SearchFilters | null
+  created_at: string
+}
+
+export async function getSearchHistory(): Promise<SearchHistoryEntry[]> {
+  const { data } = await api.get('/searches')
+  return data.data
+}
+
 /** Filtres sauvegardés et partagés (EF-03.4). */
 export interface SavedFilter {
   id: number
