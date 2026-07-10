@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Import;
 use App\Models\User;
+use App\Notifications\SireneImportFailed;
 use App\Notifications\SireneImportFinished;
 use App\Services\Ingestion\IngestionService;
 use App\Services\Ingestion\NameNormalizer;
@@ -107,6 +108,11 @@ class ImportSireneCommand extends Command
                 'finished_at' => now(),
                 'error' => $exception->getMessage(),
             ]);
+
+            // Erreur de job (EF-10.4) : un import raté sans alerte, c'est une
+            // base qui vieillit en silence — les administrateurs sont prévenus.
+            User::role('administrateur')->get()
+                ->each(fn (User $admin) => $admin->notify(new SireneImportFailed($import)));
 
             throw $exception;
         }

@@ -94,8 +94,12 @@ function label(n: AppNotification): string {
       return `Export ${(n.data.format ?? '').toUpperCase()} prêt — ${
         n.data.rows_count?.toLocaleString('fr-FR') ?? '?'
       } lignes (lien valable 7 jours)`
+    case 'ExportFailed':
+      return `Échec de l'export ${(n.data.format ?? '').toUpperCase()} — relancez-le depuis la recherche`
     case 'SireneImportFinished':
       return `Import SIRENE #${n.data.import_id} terminé`
+    case 'SireneImportFailed':
+      return `Échec de l'import SIRENE #${n.data.import_id} — consultez les journaux`
     default:
       return n.type
   }

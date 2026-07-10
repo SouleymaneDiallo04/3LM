@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Export;
+use App\Notifications\ExportFailed;
 use App\Notifications\ExportReady;
 use App\Services\Export\ExportGenerator;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -40,5 +41,8 @@ class GenerateExportJob implements ShouldQueue
             'status' => 'failed',
             'error' => $exception?->getMessage() ?? 'Échec inconnu',
         ]);
+
+        // Erreur de job (EF-10.4) : le propriétaire est prévenu de l'échec.
+        $this->export->user->notify(new ExportFailed($this->export));
     }
 }
