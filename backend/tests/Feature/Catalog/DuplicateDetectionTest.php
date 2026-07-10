@@ -24,12 +24,12 @@ beforeEach(function (): void {
     $this->first = Establishment::create([
         'siret' => '11111111100011', 'company_id' => $companyA->id,
         'name' => 'Boulangerie Dupont', 'normalized_name' => 'boulangerie dupont',
-        'status' => 'active', 'city' => 'BORDEAUX', 'department_code' => '33',
+        'status' => 'active', 'city' => 'BORDEAUX', 'postal_code' => '33000', 'department_code' => '33',
     ]);
     $this->second = Establishment::create([
         'siret' => '22222222200011', 'company_id' => $companyB->id,
         'name' => 'Boulangerie Dupont B', 'normalized_name' => 'boulangerie dupont b',
-        'status' => 'active', 'city' => 'BORDEAUX', 'department_code' => '33',
+        'status' => 'active', 'city' => 'BORDEAUX', 'postal_code' => '33000', 'department_code' => '33',
     ]);
 
     // Même SIREN : multi-établissements LÉGITIME, jamais signalé entre eux —
@@ -37,14 +37,14 @@ beforeEach(function (): void {
     $this->sibling = Establishment::create([
         'siret' => '11111111100029', 'company_id' => $companyA->id,
         'name' => 'Boulangerie Dupont', 'normalized_name' => 'boulangerie dupont',
-        'status' => 'active', 'city' => 'BORDEAUX', 'department_code' => '33',
+        'status' => 'active', 'city' => 'BORDEAUX', 'postal_code' => '33000', 'department_code' => '33',
     ]);
 
     // Ville différente : pas signalé.
     Establishment::create([
         'siret' => '22222222200029', 'company_id' => $companyB->id,
         'name' => 'Boulangerie Dupont', 'normalized_name' => 'boulangerie dupont',
-        'status' => 'active', 'city' => 'LIBOURNE', 'department_code' => '33',
+        'status' => 'active', 'city' => 'LIBOURNE', 'postal_code' => '33500', 'department_code' => '33',
     ]);
 });
 

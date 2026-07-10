@@ -54,7 +54,8 @@ class DetectDuplicatesCommand extends Command
                        'pending', now(), now()
                 FROM establishments a
                 JOIN establishments b
-                  ON b.city = a.city
+                  ON b.postal_code = a.postal_code
+                 AND b.city = a.city
                  AND b.id > a.id
                  AND b.company_id <> a.company_id
                  AND left(b.siret, 9) <> left(a.siret, 9)

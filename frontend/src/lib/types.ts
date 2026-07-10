@@ -23,6 +23,9 @@ export interface Establishment {
   }
   opening_hours?: { raw?: string; source?: string } | null
   social_links?: Record<string, string> | null
+  contact_form_url?: string | null
+  description?: string | null
+  technologies?: { cms: string | null; libs: string[] } | null
   rating: number | null
   reviews_count: number | null
   rating_source: string | null

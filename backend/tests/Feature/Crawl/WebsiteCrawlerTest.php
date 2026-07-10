@@ -56,6 +56,31 @@ it('extrait emails génériques, réseaux sociaux et note JSON-LD (EF-05)', func
         ->and($this->bakery->crawled_at)->not->toBeNull();
 });
 
+it('extrait description, formulaire de contact, technologies et CMS (§8)', function (): void {
+    Http::fake([
+        'boulangerie-dupont.fr/robots.txt' => Http::response('', 404),
+        'boulangerie-dupont.fr' => Http::response(<<<'HTML'
+            <html><head>
+              <meta name="description" content="Boulangerie artisanale à Bordeaux depuis 1987.">
+              <link rel="stylesheet" href="/wp-content/themes/dupont/style.css">
+              <script src="/wp-includes/js/jquery/jquery.min.js"></script>
+              <script src="https://cdn.example/react.production.min.js"></script>
+            </head><body>
+              <a href="/contact">Contactez-nous</a>
+            </body></html>
+            HTML),
+    ]);
+
+    app(WebsiteCrawler::class)->crawl($this->bakery);
+
+    $this->bakery->refresh();
+    expect($this->bakery->description)->toBe('Boulangerie artisanale à Bordeaux depuis 1987.')
+        ->and($this->bakery->contact_form_url)->toBe('https://boulangerie-dupont.fr/contact')
+        ->and($this->bakery->technologies['cms'])->toBe('wordpress')
+        ->and($this->bakery->technologies['libs'])->toContain('jquery')
+        ->and($this->bakery->technologies['libs'])->toContain('react');
+});
+
 it('respecte strictement robots.txt : Disallow racine = aucun crawl', function (): void {
     Http::fake([
         'boulangerie-dupont.fr/robots.txt' => Http::response("User-agent: *\nDisallow: /\n"),

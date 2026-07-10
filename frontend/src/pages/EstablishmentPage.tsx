@@ -38,6 +38,9 @@ export default function EstablishmentPage() {
             {e.name ?? e.company?.legal_name ?? 'Établissement'}
           </h1>
           <p className="mt-0.5 font-mono text-sm text-slate-500">SIRET {e.siret}</p>
+          {e.description && (
+            <p className="mt-2 max-w-2xl text-sm text-slate-600">{e.description}</p>
+          )}
         </div>
         <span
           className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
@@ -100,6 +103,21 @@ export default function EstablishmentPage() {
               href={e.contact.email ? `mailto:${e.contact.email}` : undefined}
             />
             <Row label="Horaires" value={e.opening_hours?.raw ?? null} />
+            <Row
+              label="Formulaire de contact"
+              value={e.contact_form_url ?? null}
+              href={e.contact_form_url ?? undefined}
+            />
+            <Row
+              label="CMS / technologies"
+              value={
+                e.technologies
+                  ? [e.technologies.cms, ...(e.technologies.libs ?? [])]
+                      .filter(Boolean)
+                      .join(', ') || null
+                  : null
+              }
+            />
             {Object.entries(e.social_links ?? {}).map(([network, url]) => (
               <Row
                 key={network}

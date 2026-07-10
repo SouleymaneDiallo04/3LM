@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
+use App\Support\Audit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -40,6 +41,9 @@ class AuthController extends Controller
 
         $token = $user->createToken('api')->plainTextToken;
 
+        // §12 : connexion réussie journalisée (IP et user-agent via Audit).
+        Audit::log('auth.login', userId: $user->id);
+
         return response()->json([
             'data' => [
                 'user' => $this->userPayload($user),
@@ -52,6 +56,8 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
+
+        Audit::log('auth.logout'); // §12
 
         return response()->json(['data' => ['message' => 'Déconnecté.']]);
     }

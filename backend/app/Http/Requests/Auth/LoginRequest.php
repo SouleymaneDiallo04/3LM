@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use App\Models\User;
+use App\Support\Audit;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -52,6 +53,10 @@ class LoginRequest extends FormRequest
 
         if (! $user || ! Hash::check($this->string('password'), $user->password)) {
             RateLimiter::hit($this->throttleKey(), self::DECAY_SECONDS);
+
+            // §12 : tentative échouée journalisée — sans user_id, l'identité
+            // n'étant pas prouvée ; l'email tenté part dans le payload.
+            Audit::log('auth.login_failed', payload: ['email' => (string) $this->string('email')]);
 
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),

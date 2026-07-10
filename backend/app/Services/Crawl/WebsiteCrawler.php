@@ -81,6 +81,21 @@ class WebsiteCrawler
             $updates['social_links'] = $social;
         }
 
+        if ($establishment->description === null
+            && ($description = $this->extractDescription($html)) !== null) {
+            $updates['description'] = $description;
+        }
+
+        if ($establishment->contact_form_url === null
+            && ($contactUrl = $this->extractContactFormUrl($html, $scheme, $host)) !== null) {
+            $updates['contact_form_url'] = $contactUrl;
+        }
+
+        if ($establishment->technologies === null
+            && ($technologies = $this->detectTechnologies($html)) !== null) {
+            $updates['technologies'] = $technologies;
+        }
+
         // La note vient exclusivement du JSON-LD du site : rafraîchie à chaque
         // crawl (même source, valeur la plus fraîche).
         if (($rating = $this->extractJsonLdRating($html)) !== null) {
@@ -192,6 +207,88 @@ class WebsiteCrawler
         }
 
         return $links;
+    }
+
+    /** Description du site : meta description, sinon Open Graph (§8). */
+    private function extractDescription(string $html): ?string
+    {
+        foreach ([
+            '#<meta[^>]*name=["\']description["\'][^>]*content=["\']([^"\']+)["\']#i',
+            '#<meta[^>]*content=["\']([^"\']+)["\'][^>]*name=["\']description["\']#i',
+            '#<meta[^>]*property=["\']og:description["\'][^>]*content=["\']([^"\']+)["\']#i',
+        ] as $pattern) {
+            if (preg_match($pattern, $html, $m) === 1) {
+                $text = trim(html_entity_decode($m[1]));
+
+                return $text !== '' ? mb_substr($text, 0, 500) : null;
+            }
+        }
+
+        return null;
+    }
+
+    /** Lien vers la page contact (§8) — résolu en URL absolue. */
+    private function extractContactFormUrl(string $html, string $scheme, string $host): ?string
+    {
+        if (preg_match('#href=["\']([^"\']*contact[^"\']*)["\']#i', $html, $m) !== 1) {
+            return null;
+        }
+
+        $href = html_entity_decode($m[1]);
+
+        if (preg_match('#^https?://#i', $href) === 1) {
+            return $href;
+        }
+
+        return "{$scheme}://{$host}/".ltrim($href, '/');
+    }
+
+    /**
+     * CMS et bibliothèques par signatures HTML (§8) — détection best-effort,
+     * volontairement conservatrice : mieux vaut null qu'une fausse techno.
+     *
+     * @return array{cms: string|null, libs: list<string>}|null
+     */
+    private function detectTechnologies(string $html): ?array
+    {
+        $cmsSignatures = [
+            'wordpress' => '#wp-content/|wp-includes/|generator["\'][^>]*wordpress#i',
+            'shopify' => '#cdn\.shopify\.com|myshopify\.com#i',
+            'prestashop' => '#prestashop#i',
+            'drupal' => '#/sites/default/files|generator["\'][^>]*drupal#i',
+            'joomla' => '#/media/jui/|generator["\'][^>]*joomla#i',
+            'wix' => '#static\.wixstatic\.com|wix\.com#i',
+            'squarespace' => '#squarespace\.com|static1\.squarespace#i',
+        ];
+
+        $cms = null;
+        foreach ($cmsSignatures as $name => $pattern) {
+            if (preg_match($pattern, $html) === 1) {
+                $cms = $name;
+                break;
+            }
+        }
+
+        $libSignatures = [
+            'jquery' => '#jquery[.\-]#i',
+            'react' => '#react(\.production|\.development|-dom)|data-reactroot|__NEXT_DATA__#i',
+            'vue' => '#vue(\.global|\.runtime|\.min)\.js|data-v-app#i',
+            'angular' => '#ng-version=#i',
+            'bootstrap' => '#bootstrap(\.bundle|\.min)?\.(css|js)#i',
+        ];
+
+        $libs = [];
+        foreach ($libSignatures as $name => $pattern) {
+            if (preg_match($pattern, $html) === 1) {
+                $libs[] = $name;
+            }
+        }
+
+        if ($cms === null && $libs === []) {
+            return null;
+        }
+
+        return ['cms' => $cms, 'libs' => $libs];
     }
 
     /** @return array{value: float, count: int}|null */
