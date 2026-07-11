@@ -1,9 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\DuplicateReviewController;
 use App\Http\Controllers\Api\V1\EstablishmentController;
 use App\Http\Controllers\Api\V1\ExportController;
-use App\Http\Controllers\Api\V1\DuplicateReviewController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ReferentialController;
 use App\Http\Controllers\Api\V1\SavedFilterController;
