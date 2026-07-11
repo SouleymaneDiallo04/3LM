@@ -26,6 +26,12 @@ return [
     // production (politique d'usage des instances publiques).
     'overpass_api' => env('FBDE_OVERPASS_API', 'https://overpass-api.de/api/interpreter'),
 
+    // Crawler (EF-05) : validation MX de l'email extrait (EF-05.6) —
+    // désactivée en test pour ne pas dépendre du DNS.
+    'crawl' => [
+        'validate_mx' => (bool) env('FBDE_CRAWL_VALIDATE_MX', true),
+    ],
+
     // Scoring déterministe (EF-08.1, note de cadrage) : pondérations
     // VERSIONNÉES — toute modification incrémente la version, qui est
     // tracée dans score_factors de chaque fiche scorée.

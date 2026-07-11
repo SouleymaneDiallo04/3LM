@@ -3,6 +3,7 @@
 namespace App\Services\Crawl;
 
 use App\Models\Establishment;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Throwable;
@@ -45,6 +46,15 @@ class WebsiteCrawler
             return ['status' => 'invalid_url', 'fields' => 0];
         }
 
+        // Garde SSRF : ne jamais laisser une valeur du champ « website »
+        // (issue de SIRENE ou d'OSM, éditable par des tiers) diriger le
+        // serveur vers une cible interne — métadonnées cloud, réseau privé.
+        if ($this->hostIsBlocked($host)) {
+            $establishment->update(['crawled_at' => now()]);
+
+            return ['status' => 'blocked', 'fields' => 0];
+        }
+
         $scheme = parse_url((string) $url, PHP_URL_SCHEME) ?: 'https';
 
         if (! $this->allowedByRobots($scheme, $host)) {
@@ -54,20 +64,15 @@ class WebsiteCrawler
             return ['status' => 'disallowed', 'fields' => 0];
         }
 
-        try {
-            $this->throttle($host);
-            $html = Http::withHeaders(['User-Agent' => self::USER_AGENT])
-                ->timeout(20)
-                ->get($url)
-                ->throw()
-                ->body();
-        } catch (Throwable) {
+        $response = $this->safeGet((string) $url);
+
+        if ($response === null || ! $response->successful()) {
             $establishment->update(['crawled_at' => now()]);
 
-            return ['status' => 'error', 'fields' => 0];
+            return ['status' => $response === null ? 'blocked' : 'error', 'fields' => 0];
         }
 
-        $html = substr($html, 0, 800_000);
+        $html = substr($response->body(), 0, 800_000);
         $updates = [];
 
         // Précédence par champ (correctif 15) : compléter, jamais écraser.
@@ -117,13 +122,10 @@ class WebsiteCrawler
     private function allowedByRobots(string $scheme, string $host): bool
     {
         return Cache::remember("crawl:robots:{$host}", now()->addHour(), function () use ($scheme, $host): bool {
-            try {
-                $this->throttle($host);
-                $response = Http::withHeaders(['User-Agent' => self::USER_AGENT])
-                    ->timeout(10)
-                    ->get("{$scheme}://{$host}/robots.txt");
-            } catch (Throwable) {
-                return false; // strict : injoignable = on ne crawle pas
+            $response = $this->safeGet("{$scheme}://{$host}/robots.txt", timeout: 10);
+
+            if ($response === null) {
+                return false; // strict : injoignable / bloqué = on ne crawle pas
             }
 
             if ($response->status() === 404 || $response->status() === 403) {
@@ -149,15 +151,94 @@ class WebsiteCrawler
                 }
 
                 if ($applies && preg_match('/^disallow\s*:\s*(.*)$/i', $line, $m) === 1) {
-                    $rule = trim($m[1]);
-                    if ($rule !== '' && str_starts_with('/', $rule)) {
-                        return false; // la racine est couverte par la règle
+                    // Seule la racine est visitée : elle est interdite ssi une
+                    // règle couvre « / » (Disallow: / ). (Correctif : les
+                    // arguments de str_starts_with étaient inversés.)
+                    if (trim($m[1]) === '/') {
+                        return false;
                     }
                 }
             }
 
             return true;
         });
+    }
+
+    /**
+     * GET protégé (garde SSRF) : redirections désactivées puis suivies à la
+     * main (≤ 3 sauts), chaque hôte revalidé avant connexion — une
+     * redirection vers une cible interne n'est jamais suivie. Renvoie null
+     * si l'hôte est bloqué ou la requête échoue.
+     */
+    private function safeGet(string $url, int $maxRedirects = 3, int $timeout = 20): ?Response
+    {
+        for ($hop = 0; $hop <= $maxRedirects; $hop++) {
+            $host = parse_url($url, PHP_URL_HOST);
+            if ($host === null || $host === false || $this->hostIsBlocked($host)) {
+                return null;
+            }
+
+            try {
+                $this->throttle($host);
+                $response = Http::withHeaders(['User-Agent' => self::USER_AGENT])
+                    ->timeout($timeout)
+                    ->withOptions(['allow_redirects' => false])
+                    ->get($url);
+            } catch (Throwable) {
+                return null;
+            }
+
+            if (! $response->redirect()) {
+                return $response;
+            }
+
+            $location = $response->header('Location');
+            if ($location === '') {
+                return $response;
+            }
+            // Résolution d'une éventuelle URL relative contre l'URL courante.
+            $url = str_contains($location, '://')
+                ? $location
+                : rtrim($url, '/').'/'.ltrim($location, '/');
+        }
+
+        return null; // trop de redirections
+    }
+
+    /**
+     * Un hôte est bloqué s'il pointe (littéralement ou après résolution DNS)
+     * vers une adresse privée ou réservée. Empêche les requêtes vers
+     * localhost, réseaux privés et endpoints de métadonnées cloud.
+     */
+    private function hostIsBlocked(string $host): bool
+    {
+        if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
+            return ! $this->isPublicIp($host);
+        }
+
+        // Nom d'hôte : résolution IPv4 ; injoignable → laissé passer (le
+        // client HTTP échouera de lui-même), résolu privé → bloqué.
+        $ips = gethostbynamel($host);
+        if ($ips === false) {
+            return false;
+        }
+
+        foreach ($ips as $ip) {
+            if (! $this->isPublicIp($ip)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function isPublicIp(string $ip): bool
+    {
+        return filter_var(
+            $ip,
+            FILTER_VALIDATE_IP,
+            FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE,
+        ) !== false;
     }
 
     /** Au plus une requête par seconde et par domaine (EF-05). */
@@ -180,12 +261,32 @@ class WebsiteCrawler
             $local = mb_strtolower(explode('@', $email)[0]);
             $local = preg_replace('/\+.*$/', '', $local);
 
-            if (in_array($local, self::GENERIC_PREFIXES, true)) {
+            if (in_array($local, self::GENERIC_PREFIXES, true) && $this->isDeliverable($email)) {
                 return mb_strtolower($email);
             }
         }
 
         return null;
+    }
+
+    /**
+     * Validation email (EF-05.6) : syntaxe stricte, puis existence d'un
+     * enregistrement MX (ou A en repli) du domaine — désactivable en test
+     * via fbde.crawl.validate_mx pour ne pas dépendre du DNS.
+     */
+    private function isDeliverable(string $email): bool
+    {
+        if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            return false;
+        }
+
+        if (config('fbde.crawl.validate_mx') !== true) {
+            return true;
+        }
+
+        $domain = substr((string) strrchr($email, '@'), 1);
+
+        return $domain !== '' && (checkdnsrr($domain, 'MX') || checkdnsrr($domain, 'A'));
     }
 
     /** @return array<string, string> */

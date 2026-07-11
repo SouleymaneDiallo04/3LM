@@ -81,6 +81,54 @@ it('extrait description, formulaire de contact, technologies et CMS (§8)', func
         ->and($this->bakery->technologies['libs'])->toContain('react');
 });
 
+it('refuse de crawler une cible interne (protection SSRF)', function (string $url): void {
+    $this->bakery->update(['website' => $url]);
+    Http::fake(); // aucune réponse simulée : rien ne doit partir
+
+    $result = app(WebsiteCrawler::class)->crawl($this->bakery);
+
+    expect($result['status'])->toBe('blocked')
+        ->and($this->bakery->fresh()->email)->toBeNull()
+        ->and($this->bakery->fresh()->crawled_at)->not->toBeNull();
+
+    Http::assertNothingSent();
+})->with([
+    'localhost' => 'http://127.0.0.1/',
+    'métadonnées cloud' => 'http://169.254.169.254/latest/meta-data/',
+    'réseau privé' => 'http://10.0.0.5/',
+    'réseau privé 192' => 'http://192.168.1.1/admin',
+]);
+
+it('ne suit pas une redirection vers une cible interne (SSRF via 302)', function (): void {
+    $this->bakery->update(['website' => 'https://boulangerie-dupont.fr']);
+    Http::fake([
+        'boulangerie-dupont.fr/robots.txt' => Http::response('', 404),
+        'boulangerie-dupont.fr' => Http::response('', 302, [
+            'Location' => 'http://169.254.169.254/latest/meta-data/iam/',
+        ]),
+        '169.254.169.254/*' => Http::response('AWS_SECRET_KEY=leaked'),
+    ]);
+
+    $result = app(WebsiteCrawler::class)->crawl($this->bakery);
+
+    expect($result['status'])->not->toBe('crawled')
+        ->and($this->bakery->fresh()->description)->toBeNull();
+
+    // La cible interne n'a jamais été appelée.
+    Http::assertNotSent(fn ($request): bool => str_contains($request->url(), '169.254.169.254'));
+});
+
+it('ne conserve qu\'un email au domaine délivrable (validation EF-05.6)', function (): void {
+    // Syntaxe invalide écartée même si le préfixe est générique.
+    Http::fake([
+        'boulangerie-dupont.fr/robots.txt' => Http::response('', 404),
+        'boulangerie-dupont.fr' => Http::response('Nous écrire : contact@@cassé..fr'),
+    ]);
+
+    app(WebsiteCrawler::class)->crawl($this->bakery);
+    expect($this->bakery->fresh()->email)->toBeNull();
+});
+
 it('respecte strictement robots.txt : Disallow racine = aucun crawl', function (): void {
     Http::fake([
         'boulangerie-dupont.fr/robots.txt' => Http::response("User-agent: *\nDisallow: /\n"),
