@@ -151,6 +151,57 @@ it('ignore les liens de partage et tronque les URL démesurées (robustesse donn
         ->and($this->bakery->contact_form_url)->toBeNull();
 });
 
+it('extrait l\'email d\'un lien mailto (canal le plus fiable)', function (): void {
+    Http::fake([
+        'boulangerie-dupont.fr/robots.txt' => Http::response('', 404),
+        'boulangerie-dupont.fr' => Http::response(
+            '<a href="mailto:Contact@Boulangerie-Dupont.fr?subject=Bonjour">Nous écrire</a>',
+        ),
+    ]);
+
+    app(WebsiteCrawler::class)->crawl($this->bakery);
+    expect($this->bakery->fresh()->email)->toBe('contact@boulangerie-dupont.fr');
+});
+
+it('déchiffre un email légèrement obfusqué (contact [at] domaine [dot] fr)', function (): void {
+    Http::fake([
+        'boulangerie-dupont.fr/robots.txt' => Http::response('', 404),
+        'boulangerie-dupont.fr' => Http::response('Écrivez à contact [at] boulangerie-dupont [dot] fr'),
+    ]);
+
+    app(WebsiteCrawler::class)->crawl($this->bakery);
+    expect($this->bakery->fresh()->email)->toBe('contact@boulangerie-dupont.fr');
+});
+
+it('garde un profil social malgré des paramètres de suivi, capte les 3 réseaux (§8)', function (): void {
+    Http::fake([
+        'boulangerie-dupont.fr/robots.txt' => Http::response('', 404),
+        'boulangerie-dupont.fr' => Http::response(<<<'HTML'
+            <a href="https://www.facebook.com/BoulangerieDupont?ref=page_internal&fbclid=x">FB</a>
+            <a href="https://www.linkedin.com/company/dupont/?originalSubdomain=fr">LinkedIn</a>
+            <a href="https://www.instagram.com/dupont.bordeaux/">Insta</a>
+            HTML),
+    ]);
+
+    app(WebsiteCrawler::class)->crawl($this->bakery);
+    $s = $this->bakery->fresh()->social_links;
+    expect($s['facebook'])->toBe('https://www.facebook.com/BoulangerieDupont')
+        ->and($s['linkedin'])->toBe('https://www.linkedin.com/company/dupont')
+        ->and($s['instagram'])->toBe('https://www.instagram.com/dupont.bordeaux');
+});
+
+it('classe en réseau social un website qui EST une page Facebook (sans le crawler)', function (): void {
+    $this->bakery->update(['website' => 'https://www.facebook.com/BoulangerieDupont']);
+    Http::fake(); // aucune requête ne doit partir vers facebook
+
+    $result = app(WebsiteCrawler::class)->crawl($this->bakery);
+
+    expect($result['status'])->toBe('social_only')
+        ->and($this->bakery->fresh()->social_links)->toBe(['facebook' => 'https://www.facebook.com/BoulangerieDupont'])
+        ->and($this->bakery->fresh()->crawled_at)->not->toBeNull();
+    Http::assertNothingSent();
+});
+
 it('respecte strictement robots.txt : Disallow racine = aucun crawl', function (): void {
     Http::fake([
         'boulangerie-dupont.fr/robots.txt' => Http::response("User-agent: *\nDisallow: /\n"),

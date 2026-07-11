@@ -46,6 +46,21 @@ class WebsiteCrawler
             return ['status' => 'invalid_url', 'fields' => 0];
         }
 
+        // Le « website » est parfois déjà une page de réseau social (fréquent
+        // dans OSM) : on la classe comme telle sans la crawler (une page
+        // Facebook ne livre pas le mail de l'entreprise, et est souvent
+        // interdite au crawl). L'établissement compte alors comme « a un
+        // réseau social » (critère J4).
+        if (($network = $this->socialNetworkOf($host)) !== null) {
+            $updates = ['crawled_at' => now()];
+            if ($establishment->social_links === null) {
+                $updates['social_links'] = [$network => $this->stripTracking((string) $url)];
+            }
+            $establishment->update($updates);
+
+            return ['status' => 'social_only', 'fields' => 1];
+        }
+
         // Garde SSRF : ne jamais laisser une valeur du champ « website »
         // (issue de SIRENE ou d'OSM, éditable par des tiers) diriger le
         // serveur vers une cible interne — métadonnées cloud, réseau privé.
@@ -255,14 +270,29 @@ class WebsiteCrawler
 
     private function extractGenericEmail(string $html): ?string
     {
-        preg_match_all('/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i', $html, $matches);
+        $candidates = [];
 
-        foreach (array_unique($matches[0]) as $email) {
-            $local = mb_strtolower(explode('@', $email)[0]);
-            $local = preg_replace('/\+.*$/', '', $local);
+        // 1. Liens mailto : le canal le plus fiable, examiné en priorité.
+        if (preg_match_all('/mailto:([^"\'?>\s]+)/i', $html, $m) > 0) {
+            $candidates = $m[1];
+        }
+
+        // 2. Désobfuscation légère : « contact [at] domaine [dot] fr ».
+        $deobfuscated = preg_replace(
+            ['/\s*[\[(]?\s*(?:at|arobase)\s*[\])]?\s*/i', '/\s*[\[(]?\s*dot\s*[\])]?\s*/i'],
+            ['@', '.'],
+            $html,
+        );
+
+        // 3. Emails en clair dans le texte.
+        preg_match_all('/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i', $deobfuscated, $plain);
+
+        foreach ([...$candidates, ...$plain[0]] as $email) {
+            $email = mb_strtolower(trim($email));
+            $local = preg_replace('/\+.*$/', '', explode('@', $email)[0]);
 
             if (in_array($local, self::GENERIC_PREFIXES, true) && $this->isDeliverable($email)) {
-                return mb_strtolower($email);
+                return $email;
             }
         }
 
@@ -298,11 +328,15 @@ class WebsiteCrawler
      */
     private function extractSocialLinks(string $html): array
     {
+        // Le motif capture le profil ET son éventuelle chaîne de suivi
+        // (?ref=…, ?fbclid=…) jusqu'au séparateur, pour ne pas perdre un vrai
+        // profil à cause d'un paramètre — la chaîne est retirée ensuite.
+        $tail = '[^"\'\s<)]*';
         $patterns = [
-            'facebook' => '#https?://(?:www\.)?facebook\.com/[\w.\-]+/?#i',
-            'linkedin' => '#https?://(?:www\.)?linkedin\.com/(?:company|in)/[\w\-]+/?#i',
-            'instagram' => '#https?://(?:www\.)?instagram\.com/[\w.\-]+/?#i',
-            'twitter' => '#https?://(?:www\.)?(?:twitter|x)\.com/[\w]+/?#i',
+            'facebook' => '#https?://(?:www\.)?facebook\.com/[\w.\-]+'.$tail.'#i',
+            'linkedin' => '#https?://(?:www\.)?linkedin\.com/(?:company|in)/[\w\-]+'.$tail.'#i',
+            'instagram' => '#https?://(?:www\.)?instagram\.com/[\w.\-]+'.$tail.'#i',
+            'twitter' => '#https?://(?:www\.)?(?:twitter|x)\.com/[\w]+'.$tail.'#i',
         ];
 
         // Chemins qui ne sont jamais un profil d'entreprise.
@@ -313,8 +347,8 @@ class WebsiteCrawler
         foreach ($patterns as $network => $pattern) {
             if (preg_match_all($pattern, $html, $all) > 0) {
                 foreach ($all[0] as $url) {
-                    if (preg_match($reserved, $url) === 0 && ! str_contains($url, '?')) {
-                        $links[$network] = rtrim($url, '/');
+                    if (preg_match($reserved, $url) === 0) {
+                        $links[$network] = $this->stripTracking($url);
                         break;
                     }
                 }
@@ -322,6 +356,26 @@ class WebsiteCrawler
         }
 
         return $links;
+    }
+
+    /** Réseau social correspondant à un hôte, ou null. */
+    private function socialNetworkOf(string $host): ?string
+    {
+        $host = mb_strtolower($host);
+
+        return match (true) {
+            str_contains($host, 'facebook.com') => 'facebook',
+            str_contains($host, 'linkedin.com') => 'linkedin',
+            str_contains($host, 'instagram.com') => 'instagram',
+            str_contains($host, 'twitter.com'), str_contains($host, 'x.com') => 'twitter',
+            default => null,
+        };
+    }
+
+    /** Retire la chaîne de requête et le fragment, la barre finale. */
+    private function stripTracking(string $url): string
+    {
+        return rtrim(preg_replace('/[?#].*$/', '', $url) ?? $url, '/');
     }
 
     /** Description du site : meta description, sinon Open Graph (§8). */
