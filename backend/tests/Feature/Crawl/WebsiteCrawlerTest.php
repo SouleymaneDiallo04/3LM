@@ -129,6 +129,28 @@ it('ne conserve qu\'un email au domaine délivrable (validation EF-05.6)', funct
     expect($this->bakery->fresh()->email)->toBeNull();
 });
 
+it('ignore les liens de partage et tronque les URL démesurées (robustesse données réelles)', function (): void {
+    $longContact = 'https://exemple.fr/contact?'.str_repeat('a', 400); // > 255
+    Http::fake([
+        'boulangerie-dupont.fr/robots.txt' => Http::response('', 404),
+        'boulangerie-dupont.fr' => Http::response(<<<HTML
+            <a href="https://www.facebook.com/sharer/sharer.php?u=x">Partager</a>
+            <a href="https://twitter.com/intent/tweet?url=x">Tweeter</a>
+            <a href="https://www.facebook.com/boulangeriedupont">Notre page</a>
+            <a href="{$longContact}">Contact</a>
+            HTML),
+    ]);
+
+    $result = app(WebsiteCrawler::class)->crawl($this->bakery);
+    $this->bakery->refresh();
+
+    // Le vrai profil est retenu, les liens de partage écartés.
+    expect($result['status'])->toBe('crawled')
+        ->and($this->bakery->social_links)->toBe(['facebook' => 'https://www.facebook.com/boulangeriedupont'])
+        // Une URL de contact > 255 caractères n'est pas stockée (jamais de crash).
+        ->and($this->bakery->contact_form_url)->toBeNull();
+});
+
 it('respecte strictement robots.txt : Disallow racine = aucun crawl', function (): void {
     Http::fake([
         'boulangerie-dupont.fr/robots.txt' => Http::response("User-agent: *\nDisallow: /\n"),

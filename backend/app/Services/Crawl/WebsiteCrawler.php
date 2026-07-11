@@ -289,21 +289,35 @@ class WebsiteCrawler
         return $domain !== '' && (checkdnsrr($domain, 'MX') || checkdnsrr($domain, 'A'));
     }
 
-    /** @return array<string, string> */
+    /**
+     * Liens de réseaux sociaux — profils uniquement : les URL de partage
+     * (sharer, intent, dialog) et les chemins réservés sont écartés, sinon
+     * un bouton « Partager sur X » serait pris pour le compte de l'entreprise.
+     *
+     * @return array<string, string>
+     */
     private function extractSocialLinks(string $html): array
     {
         $patterns = [
-            'facebook' => '#https?://(?:www\.)?facebook\.com/[\w.\-/]+#i',
-            'linkedin' => '#https?://(?:www\.)?linkedin\.com/(?:company|in)/[\w\-]+#i',
-            'instagram' => '#https?://(?:www\.)?instagram\.com/[\w.\-]+#i',
-            'twitter' => '#https?://(?:www\.)?(?:twitter|x)\.com/[\w]+#i',
+            'facebook' => '#https?://(?:www\.)?facebook\.com/[\w.\-]+/?#i',
+            'linkedin' => '#https?://(?:www\.)?linkedin\.com/(?:company|in)/[\w\-]+/?#i',
+            'instagram' => '#https?://(?:www\.)?instagram\.com/[\w.\-]+/?#i',
+            'twitter' => '#https?://(?:www\.)?(?:twitter|x)\.com/[\w]+/?#i',
         ];
+
+        // Chemins qui ne sont jamais un profil d'entreprise.
+        $reserved = '#/(?:sharer|share|intent|dialog|home|hashtag|search|login|signup)#i';
 
         $links = [];
 
         foreach ($patterns as $network => $pattern) {
-            if (preg_match($pattern, $html, $m) === 1) {
-                $links[$network] = $m[0];
+            if (preg_match_all($pattern, $html, $all) > 0) {
+                foreach ($all[0] as $url) {
+                    if (preg_match($reserved, $url) === 0 && ! str_contains($url, '?')) {
+                        $links[$network] = rtrim($url, '/');
+                        break;
+                    }
+                }
             }
         }
 
@@ -328,7 +342,7 @@ class WebsiteCrawler
         return null;
     }
 
-    /** Lien vers la page contact (§8) — résolu en URL absolue. */
+    /** Lien vers la page contact (§8) — résolu en URL absolue, ≤ 255 car. */
     private function extractContactFormUrl(string $html, string $scheme, string $host): ?string
     {
         if (preg_match('#href=["\']([^"\']*contact[^"\']*)["\']#i', $html, $m) !== 1) {
@@ -337,11 +351,13 @@ class WebsiteCrawler
 
         $href = html_entity_decode($m[1]);
 
-        if (preg_match('#^https?://#i', $href) === 1) {
-            return $href;
-        }
+        $url = preg_match('#^https?://#i', $href) === 1
+            ? $href
+            : "{$scheme}://{$host}/".ltrim($href, '/');
 
-        return "{$scheme}://{$host}/".ltrim($href, '/');
+        // Colonne varchar(255) : au-delà, c'est presque toujours un lien de
+        // suivi/partage — on préfère ne rien stocker qu'un déchet tronqué.
+        return mb_strlen($url) <= 255 ? $url : null;
     }
 
     /**

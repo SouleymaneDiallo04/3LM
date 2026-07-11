@@ -46,7 +46,17 @@ class CrawlWebsitesCommand extends Command
 
         try {
             foreach ($establishments as $establishment) {
-                $result = $crawler->crawl($establishment);
+                // Résilience : un site aberrant (donnée hors normes) ne doit
+                // jamais interrompre le lot — il est compté en erreur et on
+                // marque la fiche crawlée pour ne pas la reprendre en boucle.
+                try {
+                    $result = $crawler->crawl($establishment);
+                } catch (Throwable) {
+                    $establishment->forceFill(['crawled_at' => now()])->saveQuietly();
+                    $stats['errors']++;
+
+                    continue;
+                }
 
                 match ($result['status']) {
                     'crawled' => $stats['crawled']++,
