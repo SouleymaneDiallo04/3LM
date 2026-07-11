@@ -100,6 +100,36 @@ export async function deleteSavedFilter(id: number): Promise<void> {
   await api.delete(`/saved-filters/${id}`)
 }
 
+/** Revue des doublons (EF-04.2). */
+export interface DuplicateSide {
+  id: number
+  siret: string
+  name: string | null
+  address: string
+  naf_code: string | null
+  phone: string | null
+  email: string | null
+  website: string | null
+  filled_fields: number
+}
+export interface DuplicatePair {
+  id: number
+  similarity: number
+  a: DuplicateSide
+  b: DuplicateSide
+}
+
+export async function getDuplicates(): Promise<DuplicatePair[]> {
+  const { data } = await api.get('/duplicates')
+  return data.data
+}
+export async function mergeDuplicate(pairId: number, keepId: number): Promise<void> {
+  await api.post(`/duplicates/${pairId}/merge`, { keep_id: keepId })
+}
+export async function markDistinct(pairId: number): Promise<void> {
+  await api.post(`/duplicates/${pairId}/distinct`)
+}
+
 /** Fiche complète d'un établissement. */
 export async function getEstablishment(id: number | string): Promise<Establishment> {
   const { data } = await api.get(`/companies/${id}`)

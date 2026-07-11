@@ -39,6 +39,10 @@ export default function AppLayout() {
               ['/', 'Tableau de bord', true],
               ['/recherche', 'Recherche', false],
               ['/carte', 'Carte', false],
+              // Qualité des données : managers et administrateurs (EF-04.2).
+              ...(hasPermission('duplicates.review')
+                ? ([['/doublons', 'Doublons', false]] as const)
+                : []),
               // Administration : visible seulement avec users.manage (EF-10.2).
               ...(hasPermission('users.manage')
                 ? ([['/utilisateurs', 'Utilisateurs', false]] as const)

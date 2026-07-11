@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\EstablishmentController;
 use App\Http\Controllers\Api\V1\ExportController;
+use App\Http\Controllers\Api\V1\DuplicateReviewController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ReferentialController;
 use App\Http\Controllers\Api\V1\SavedFilterController;
@@ -78,6 +79,17 @@ Route::prefix('v1')->group(function (): void {
     // Agrégats du tableau de bord (§7, EF-06).
     Route::middleware(['auth:sanctum', 'abilities:*', 'permission:statistics.view'])
         ->get('statistics', [StatisticsController::class, 'index'])->name('statistics');
+
+    // Revue des doublons (EF-04.2) : managers et administrateurs.
+    Route::middleware(['auth:sanctum', 'abilities:*', 'permission:duplicates.review'])
+        ->group(function (): void {
+            Route::get('duplicates', [DuplicateReviewController::class, 'index'])
+                ->name('duplicates.index');
+            Route::post('duplicates/{duplicateReview}/merge', [DuplicateReviewController::class, 'merge'])
+                ->name('duplicates.merge');
+            Route::post('duplicates/{duplicateReview}/distinct', [DuplicateReviewController::class, 'distinct'])
+                ->name('duplicates.distinct');
+        });
 
     // Gestion des utilisateurs (EF-10.2) : administrateurs uniquement.
     Route::middleware(['auth:sanctum', 'abilities:*', 'permission:users.manage'])

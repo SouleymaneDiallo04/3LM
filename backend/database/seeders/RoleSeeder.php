@@ -31,6 +31,9 @@ class RoleSeeder extends Seeder
         // CRM
         'prospects.manage',
 
+        // Qualité des données
+        'duplicates.review',
+
         // Plateforme (administration)
         'users.manage',
         'roles.manage',
@@ -55,6 +58,7 @@ class RoleSeeder extends Seeder
             'exports.create',
             'prospects.manage',
             'team.manage',
+            'duplicates.review',
         ],
         // L'administrateur reçoit toutes les permissions.
         'administrateur' => self::PERMISSIONS,
