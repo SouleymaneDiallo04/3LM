@@ -14,8 +14,9 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Générations IA (EF-08.2) : résumé d'entreprise stocké. Refus RGPD → 422 ;
- * panne du fournisseur → 503.
+ * Générations IA : résumé d'entreprise stocké (EF-08.2) et argumentaire
+ * commercial à la demande, non stocké (EF-08.4). Refus RGPD → 422 ;
+ * validation du canal → 422 ; panne du fournisseur → 503.
  */
 class AiController extends Controller
 {

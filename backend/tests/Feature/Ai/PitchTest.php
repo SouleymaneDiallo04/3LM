@@ -3,6 +3,7 @@
 use App\Models\Company;
 use App\Models\Establishment;
 use App\Models\User;
+use App\Services\Ai\Contracts\AiClient;
 use App\Services\Ai\FakeAiClient;
 use Database\Seeders\DepartmentSeeder;
 use Database\Seeders\RegionSeeder;
@@ -52,4 +53,22 @@ it('refuse l\'argumentaire pour une fiche non-diffusible (RGPD)', function (): v
     $this->actingAs($this->user)
         ->postJson("/api/v1/companies/{$id}/pitch", ['channel' => 'call'])
         ->assertStatus(422);
+});
+
+it('renvoie 503 si le service IA échoue', function (): void {
+    // Doublure qui lève, injectée pour ce test.
+    $this->app->bind(AiClient::class, function () {
+        return new class implements AiClient
+        {
+            public function chat(array $messages, array $options = []): string
+            {
+                throw new RuntimeException('API down');
+            }
+        };
+    });
+    $id = $this->e->id;
+
+    $this->actingAs($this->user)
+        ->postJson("/api/v1/companies/{$id}/pitch", ['channel' => 'email'])
+        ->assertStatus(503);
 });
