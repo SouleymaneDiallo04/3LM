@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Establishment } from '../../lib/types'
 import { aiErrorMessage, generatePitch } from './api'
 import RevealText from './RevealText'
@@ -18,10 +18,25 @@ export default function PitchPanel({ establishment }: { establishment: Establish
   const [status, setStatus] = useState<Status>('idle')
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const copyTimer = useRef<number | undefined>(undefined)
+
+  useEffect(() => () => window.clearTimeout(copyTimer.current), [])
+
+  // Changer de canal invalide l'argumentaire affiché : il est propre à un canal,
+  // on ne laisse jamais un texte email étiqueté « appel » (ou l'inverse).
+  function selectChannel(next: Channel) {
+    if (next === channel) return
+    setChannel(next)
+    setPitch(null)
+    setError(null)
+    setStatus('idle')
+    setCopied(false)
+  }
 
   async function run() {
     setStatus('loading')
     setError(null)
+    setCopied(false)
     try {
       const result = await generatePitch(establishment.id, channel)
       setPitch(result.pitch)
@@ -36,7 +51,8 @@ export default function PitchPanel({ establishment }: { establishment: Establish
     if (!pitch) return
     await navigator.clipboard.writeText(pitch)
     setCopied(true)
-    window.setTimeout(() => setCopied(false), 1600)
+    window.clearTimeout(copyTimer.current)
+    copyTimer.current = window.setTimeout(() => setCopied(false), 1600)
   }
 
   return (
@@ -58,13 +74,15 @@ export default function PitchPanel({ establishment }: { establishment: Establish
           >
             <ChannelButton
               active={channel === 'email'}
-              onClick={() => setChannel('email')}
+              disabled={status === 'loading'}
+              onClick={() => selectChannel('email')}
               icon={<MailIcon className="h-3.5 w-3.5" />}
               label="Email"
             />
             <ChannelButton
               active={channel === 'call'}
-              onClick={() => setChannel('call')}
+              disabled={status === 'loading'}
+              onClick={() => selectChannel('call')}
               icon={<PhoneIcon className="h-3.5 w-3.5" />}
               label="Appel"
             />
@@ -120,11 +138,13 @@ export default function PitchPanel({ establishment }: { establishment: Establish
 
 function ChannelButton({
   active,
+  disabled,
   onClick,
   icon,
   label,
 }: {
   active: boolean
+  disabled?: boolean
   onClick: () => void
   icon: ReactNode
   label: string
@@ -133,8 +153,9 @@ function ChannelButton({
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       aria-pressed={active}
-      className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 ${
+      className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 disabled:opacity-50 ${
         active
           ? 'bg-white text-sky-700 shadow-sm'
           : 'text-slate-500 hover:text-slate-800'

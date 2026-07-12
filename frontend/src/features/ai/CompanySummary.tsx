@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Establishment } from '../../lib/types'
 import { aiErrorMessage, generateSummary } from './api'
 import RevealText from './RevealText'
@@ -19,8 +19,11 @@ export default function CompanySummary({ establishment }: { establishment: Estab
   const [error, setError] = useState<string | null>(null)
   // Révélation seulement après une génération de cette session (pas au chargement).
   const [revealed, setRevealed] = useState(false)
+  // Mémorise l'intention (refresh ou non) pour que « Réessayer » rejoue le même appel.
+  const lastRefresh = useRef(false)
 
   async function run(refresh: boolean) {
+    lastRefresh.current = refresh
     setStatus('loading')
     setError(null)
     try {
@@ -47,7 +50,7 @@ export default function CompanySummary({ establishment }: { establishment: Estab
           </span>
         </h2>
 
-        {summary && status !== 'loading' && (
+        {summary && status === 'idle' && (
           <div className="flex items-center gap-2">
             {stale && (
               <span
@@ -72,6 +75,10 @@ export default function CompanySummary({ establishment }: { establishment: Estab
       <div className="mt-3" aria-live="polite" aria-busy={status === 'loading'}>
         {status === 'loading' ? (
           <SummarySkeleton />
+        ) : status === 'error' ? (
+          // L'erreur prime sur le résumé mémorisé : un refus RGPD (422) postérieur
+          // ne doit plus laisser voir le résumé caché.
+          <ErrorState message={error ?? ''} onRetry={() => run(lastRefresh.current)} />
         ) : summary ? (
           <>
             {revealed ? (
@@ -86,8 +93,6 @@ export default function CompanySummary({ establishment }: { establishment: Estab
               <p className="mt-2.5 text-xs text-slate-500">Généré le {formatDate(generatedAt)}</p>
             )}
           </>
-        ) : status === 'error' ? (
-          <ErrorState message={error ?? ''} onRetry={() => run(false)} />
         ) : (
           <EmptyState onGenerate={() => run(false)} />
         )}
