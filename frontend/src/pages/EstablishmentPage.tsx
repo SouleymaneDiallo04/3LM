@@ -132,10 +132,33 @@ export default function EstablishmentPage() {
         <section className="rounded-xl border border-slate-200 bg-white p-4">
           <h2 className="text-sm font-semibold text-slate-900">Scores</h2>
           <dl className="mt-2 space-y-1.5 text-sm">
-            <Row
-              label="Score commercial"
-              value={e.commercial_score !== null ? `${e.commercial_score}/100` : 'À venir (phase 5)'}
-            />
+            <div className="flex justify-between gap-4">
+              <dt className="text-slate-500">Score commercial</dt>
+              <dd className="text-right">
+                {e.commercial_score !== null ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="font-mono tabular-nums">{e.commercial_score}/100</span>
+                    {e.commercial_tier && (
+                      <span
+                        className={`rounded px-1.5 py-0.5 text-xs font-semibold ${
+                          e.commercial_tier === 'A'
+                            ? 'bg-green-100 text-green-800'
+                            : e.commercial_tier === 'B'
+                              ? 'bg-sky-100 text-sky-800'
+                              : e.commercial_tier === 'C'
+                                ? 'bg-amber-100 text-amber-800'
+                                : 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        Palier {e.commercial_tier}
+                      </span>
+                    )}
+                  </span>
+                ) : (
+                  <span className="text-slate-300">—</span>
+                )}
+              </dd>
+            </div>
             <Row
               label="Indice de réputation"
               value={e.reputation_score !== null ? `${e.reputation_score}/100` : 'À venir (phase 4)'}

@@ -31,6 +31,7 @@ export interface Establishment {
   rating_source: string | null
   reputation_score: number | null
   commercial_score: number | null
+  commercial_tier: 'A' | 'B' | 'C' | 'D' | null
   company?: {
     siren: string
     legal_name: string
@@ -66,6 +67,7 @@ export interface SearchFilters {
   min_rating?: number
   min_reviews?: number
   min_employees?: string
+  min_tier?: 'A' | 'B' | 'C' | 'D'
   lat?: number
   lng?: number
   radius_km?: number

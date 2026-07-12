@@ -12,6 +12,31 @@ use App\Models\Establishment;
  */
 class ScoringService
 {
+    /**
+     * Palier de classement (CDC §14) déterministe depuis le score commercial :
+     * A (≥70) / B (≥40) / C (≥20) / D. Null si la fiche n'a pas de score.
+     */
+    public function tier(?int $score): ?string
+    {
+        if ($score === null) {
+            return null;
+        }
+
+        foreach (config('fbde.scoring.tiers') as $letter => $threshold) {
+            if ($score >= $threshold) {
+                return $letter;
+            }
+        }
+
+        return 'D';
+    }
+
+    /** Seuil de score minimal d'un palier — pour filtrer les meilleurs prospects. */
+    public function tierFloor(string $tier): ?int
+    {
+        return config("fbde.scoring.tiers.{$tier}");
+    }
+
     public function score(Establishment $establishment): void
     {
         $weights = config('fbde.scoring');

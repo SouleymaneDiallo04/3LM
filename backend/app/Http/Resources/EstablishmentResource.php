@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Establishment;
+use App\Services\Scoring\ScoringService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -56,6 +57,8 @@ class EstablishmentResource extends JsonResource
             'rating_source' => $this->rating_source,
             'reputation_score' => $this->reputation_score,
             'commercial_score' => $this->commercial_score,
+            'commercial_tier' => app(ScoringService::class)
+                ->tier($this->commercial_score),
             'company' => $this->whenLoaded('company', fn (): array => [
                 'siren' => $this->company->siren,
                 'legal_name' => $this->company->legal_name,

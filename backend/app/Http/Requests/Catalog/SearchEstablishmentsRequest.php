@@ -46,6 +46,8 @@ class SearchEstablishmentsRequest extends FormRequest
             'min_reviews' => ['sometimes', 'integer', 'min:1'],
             // Tranches d'effectif SIRENE — l'encodage INSEE est ordonné.
             'min_employees' => ['sometimes', 'in:01,02,03,11,12,21,22,31,32,41,42,51,52,53'],
+            // Meilleurs prospects (CDC §14) : palier de classement minimal.
+            'min_tier' => ['sometimes', 'in:A,B,C,D'],
             // Rayon géographique 5-100 km (EF-01.3).
             'lat' => ['required_with:radius_km', 'numeric', 'between:-90,90'],
             'lng' => ['required_with:radius_km', 'numeric', 'between:-180,180'],

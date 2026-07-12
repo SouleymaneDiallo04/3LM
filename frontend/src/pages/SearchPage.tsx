@@ -299,6 +299,19 @@ export default function SearchPage() {
             />
           </label>
           <label className="flex items-center gap-1.5 text-sm text-slate-600">
+            Prospects
+            <select
+              value={filters.min_tier ?? ''}
+              onChange={(e) => set({ min_tier: (e.target.value || undefined) as typeof filters.min_tier })}
+              className="rounded-md border border-slate-300 px-2 py-1 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+            >
+              <option value="">Tous</option>
+              <option value="A">Palier A (excellents)</option>
+              <option value="B">Palier B et +</option>
+              <option value="C">Palier C et +</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-1.5 text-sm text-slate-600">
             Effectif
             <select
               value={filters.min_employees ?? ''}

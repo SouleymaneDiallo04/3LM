@@ -37,6 +37,14 @@ return [
     // tracée dans score_factors de chaque fiche scorée.
     'scoring' => [
         'version' => '1.0.0',
+        // Classement automatique (CDC §14) : paliers déterministes dérivés du
+        // score, seuil minimal par lettre — versionné avec le reste du scoring.
+        'tiers' => [
+            'A' => 70,
+            'B' => 40,
+            'C' => 20,
+            'D' => 0,
+        ],
         'reputation' => [
             'rating_max_points' => 70,   // note JSON-LD ramenée sur 70
             'volume_max_points' => 30,   // volume d'avis, échelle log

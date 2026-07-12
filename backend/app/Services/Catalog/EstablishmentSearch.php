@@ -4,6 +4,7 @@ namespace App\Services\Catalog;
 
 use App\Models\Establishment;
 use App\Services\Ingestion\NameNormalizer;
+use App\Services\Scoring\ScoringService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 
@@ -67,6 +68,12 @@ class EstablishmentSearch
         // Recherche avancée (CDC) : note minimale, volume d'avis minimal,
         // taille minimale (les codes tranche INSEE sont ordonnés — la
         // comparaison lexicographique est valide ; « NN » = non renseigné).
+        // Meilleurs prospects (CDC §14) : palier minimal → seuil de score.
+        $query->when($filters['min_tier'] ?? null, function ($q, string $tier): void {
+            $floor = app(ScoringService::class)->tierFloor($tier);
+            $q->where('commercial_score', '>=', $floor);
+        });
+
         $query->when($filters['min_rating'] ?? null, fn ($q, $v) => $q->where('rating', '>=', $v));
         $query->when($filters['min_reviews'] ?? null, fn ($q, $v) => $q->where('reviews_count', '>=', $v));
         $query->when($filters['min_employees'] ?? null, fn ($q, $v) => $q
