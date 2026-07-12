@@ -70,6 +70,14 @@ class EstablishmentResource extends JsonResource
             'imported_at' => $this->imported_at?->toIso8601String(),
             'enriched_at' => $this->enriched_at?->toIso8601String(),
             'crawled_at' => $this->crawled_at?->toIso8601String(),
+            'ai_summary' => $this->ai_summary,
+            'ai_summary_version' => $this->ai_summary_version,
+            'ai_summary_at' => $this->ai_summary_at?->toIso8601String(),
+            // Péremption : la fiche a été enrichie/crawlée après le résumé.
+            'ai_summary_stale' => $this->ai_summary_at !== null && (
+                ($this->enriched_at !== null && $this->enriched_at->gt($this->ai_summary_at))
+                || ($this->crawled_at !== null && $this->crawled_at->gt($this->ai_summary_at))
+            ),
         ];
     }
 }

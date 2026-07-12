@@ -31,6 +31,7 @@ class Establishment extends Model
             'imported_at' => 'datetime',
             'enriched_at' => 'datetime',
             'crawled_at' => 'datetime',
+            'ai_summary_at' => 'datetime',
         ];
     }
 
