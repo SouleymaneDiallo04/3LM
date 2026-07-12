@@ -60,4 +60,12 @@ return [
             'reputation_ratio' => 0.30,  // indice réputation × 0,30 (max 30)
         ],
     ],
+
+    // Module IA (§14, EF-08) : fournisseur substituable, prompts versionnés.
+    'ai' => [
+        'driver' => env('FBDE_AI_DRIVER', 'fake'), // fake | mistral
+        'model' => env('FBDE_AI_MODEL', 'mistral-small-latest'),
+        'endpoint' => env('FBDE_AI_ENDPOINT', 'https://api.mistral.ai/v1/chat/completions'),
+        'max_description_chars' => 1000,
+    ],
 ];
