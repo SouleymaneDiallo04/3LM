@@ -3,6 +3,7 @@
 use App\Models\Company;
 use App\Models\Establishment;
 use App\Models\User;
+use App\Services\Ai\Contracts\AiClient;
 use App\Services\Ai\FakeAiClient;
 use Database\Seeders\DepartmentSeeder;
 use Database\Seeders\RegionSeeder;
@@ -86,13 +87,26 @@ it('refuse la génération pour une fiche en liste d\'exclusion (RGPD)', functio
         ->assertStatus(422);
 });
 
+it('refuse le résumé en cache si la fiche est devenue non-diffusible (RGPD)', function (): void {
+    // Résumé généré alors que la fiche était diffusible…
+    $this->e->update(['ai_summary' => 'Ancien résumé.', 'ai_summary_version' => '1.0.0', 'ai_summary_at' => now()]);
+    // …puis opposition postérieure : l'unité légale passe non-diffusible.
+    $this->e->company->update(['is_diffusible' => false]);
+    $id = $this->e->id;
+
+    // Même sans refresh, la garde RGPD doit être ré-évaluée avant de servir le cache.
+    $this->actingAs($this->user)->postJson("/api/v1/companies/{$id}/summary")
+        ->assertStatus(422);
+});
+
 it('renvoie 503 si le service IA échoue', function (): void {
     // Doublure qui lève, injectée pour ce test.
-    $this->app->bind(\App\Services\Ai\Contracts\AiClient::class, function () {
-        return new class implements \App\Services\Ai\Contracts\AiClient {
+    $this->app->bind(AiClient::class, function () {
+        return new class implements AiClient
+        {
             public function chat(array $messages, array $options = []): string
             {
-                throw new \RuntimeException('API down');
+                throw new RuntimeException('API down');
             }
         };
     });

@@ -9,16 +9,26 @@ use App\Services\Ai\Exceptions\AiGenerationDenied;
 use App\Services\Ai\Prompts;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Générations IA (EF-08.2/08.4) : résumé (stocké) et argumentaire (à la
- * demande). Refus RGPD → 422 ; panne du fournisseur → 503.
+ * Générations IA (EF-08.2) : résumé d'entreprise stocké. Refus RGPD → 422 ;
+ * panne du fournisseur → 503.
  */
 class AiController extends Controller
 {
     public function summary(Request $request, Establishment $establishment, CompanySummarizer $summarizer): JsonResponse
     {
+        // Garde RGPD évaluée AVANT le cache : une opposition postérieure à la
+        // génération (fiche non-diffusible ou entrée en liste d'exclusion) doit
+        // stopper la diffusion du résumé mémorisé, refresh ou non.
+        try {
+            $summarizer->assertAllowed($establishment);
+        } catch (AiGenerationDenied $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
         // Cache : renvoyé tel quel sauf ?refresh.
         if ($establishment->ai_summary !== null && ! $request->boolean('refresh')) {
             return response()->json(['data' => [
@@ -32,7 +42,13 @@ class AiController extends Controller
             $summary = $summarizer->summarize($establishment);
         } catch (AiGenerationDenied $e) {
             return response()->json(['message' => $e->getMessage()], 422);
-        } catch (Throwable) {
+        } catch (Throwable $e) {
+            // Message client neutre ; on trace sans exposer d'identifiants ni de clé.
+            Log::warning('Échec de génération du résumé IA', [
+                'establishment_id' => $establishment->id,
+                'exception' => $e::class,
+            ]);
+
             return response()->json(['message' => 'Service IA momentanément indisponible.'], 503);
         }
 
