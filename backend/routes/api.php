@@ -64,6 +64,8 @@ Route::prefix('v1')->group(function (): void {
             // Générations IA (EF-08.2/08.4) : résumé (stocké) et argumentaire.
             Route::post('companies/{establishment}/summary', [AiController::class, 'summary'])
                 ->name('companies.summary');
+            Route::post('companies/{establishment}/pitch', [AiController::class, 'pitch'])
+                ->name('companies.pitch');
 
             // Référentiel régions/départements pour les filtres (EF-01.2).
             Route::get('referentiels', [ReferentialController::class, 'index'])

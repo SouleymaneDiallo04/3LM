@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Establishment;
 use App\Services\Ai\CompanySummarizer;
 use App\Services\Ai\Exceptions\AiGenerationDenied;
+use App\Services\Ai\PitchGenerator;
 use App\Services\Ai\Prompts;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -62,6 +63,33 @@ class AiController extends Controller
             'summary' => $summary,
             'version' => Prompts::VERSION,
             'generated_at' => now()->toIso8601String(),
+        ]]);
+    }
+
+    public function pitch(Request $request, Establishment $establishment, PitchGenerator $generator): JsonResponse
+    {
+        $validated = $request->validate([
+            'channel' => ['required', 'in:email,call'],
+        ]);
+
+        try {
+            $pitch = $generator->generate($establishment, $validated['channel']);
+        } catch (AiGenerationDenied $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        } catch (Throwable $e) {
+            // Message client neutre ; on trace sans exposer d'identifiants ni de clé.
+            Log::warning('Échec de génération de l\'argumentaire IA', [
+                'establishment_id' => $establishment->id,
+                'exception' => $e::class,
+            ]);
+
+            return response()->json(['message' => 'Service IA momentanément indisponible.'], 503);
+        }
+
+        return response()->json(['data' => [
+            'pitch' => $pitch,
+            'channel' => $validated['channel'],
+            'version' => Prompts::VERSION,
         ]]);
     }
 }
