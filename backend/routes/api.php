@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AiController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DuplicateReviewController;
 use App\Http\Controllers\Api\V1\EstablishmentController;
@@ -59,6 +60,10 @@ Route::prefix('v1')->group(function (): void {
                 ->name('companies.map');
             Route::get('companies/{establishment}', [EstablishmentController::class, 'show'])
                 ->name('companies.show');
+
+            // Générations IA (EF-08.2/08.4) : résumé (stocké) et argumentaire.
+            Route::post('companies/{establishment}/summary', [AiController::class, 'summary'])
+                ->name('companies.summary');
 
             // Référentiel régions/départements pour les filtres (EF-01.2).
             Route::get('referentiels', [ReferentialController::class, 'index'])
