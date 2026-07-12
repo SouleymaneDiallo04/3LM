@@ -202,6 +202,51 @@ it('classe en réseau social un website qui EST une page Facebook (sans le crawl
     Http::assertNothingSent();
 });
 
+it('récupère un site muet en http en tentant https (nettoyage d\'URL)', function (): void {
+    $this->bakery->update(['website' => 'http://boulangerie-dupont.fr']);
+    Http::fake([
+        // http échoue (site migré en https), https répond.
+        'http://boulangerie-dupont.fr/robots.txt' => Http::response('', 404),
+        'http://boulangerie-dupont.fr' => Http::response('', 500),
+        'https://boulangerie-dupont.fr/robots.txt' => Http::response('', 404),
+        'https://boulangerie-dupont.fr' => Http::response(
+            '<a href="mailto:contact@boulangerie-dupont.fr">Écrire</a>',
+        ),
+    ]);
+
+    $result = app(WebsiteCrawler::class)->crawl($this->bakery);
+
+    expect($result['status'])->toBe('crawled')
+        ->and($this->bakery->fresh()->email)->toBe('contact@boulangerie-dupont.fr');
+});
+
+it('tente la variante www quand l\'apex ne répond pas', function (): void {
+    $this->bakery->update(['website' => 'https://boulangerie-dupont.fr']);
+    Http::fake([
+        'https://boulangerie-dupont.fr/robots.txt' => Http::response('', 404),
+        'https://boulangerie-dupont.fr' => Http::response('', 503),
+        'https://www.boulangerie-dupont.fr/robots.txt' => Http::response('', 404),
+        'https://www.boulangerie-dupont.fr' => Http::response(
+            '<a href="mailto:info@boulangerie-dupont.fr">Écrire</a>',
+        ),
+    ]);
+
+    app(WebsiteCrawler::class)->crawl($this->bakery);
+    expect($this->bakery->fresh()->email)->toBe('info@boulangerie-dupont.fr');
+});
+
+it('n\'émet aucune requête superflue quand le site répond du premier coup', function (): void {
+    Http::fake([
+        'boulangerie-dupont.fr/robots.txt' => Http::response('', 404),
+        'boulangerie-dupont.fr' => Http::response('<a href="mailto:contact@boulangerie-dupont.fr">x</a>'),
+    ]);
+
+    app(WebsiteCrawler::class)->crawl($this->bakery);
+
+    // robots + page = 2 requêtes ; aucune variante inutile.
+    expect(collect(Http::recorded()))->toHaveCount(2);
+});
+
 it('respecte strictement robots.txt : Disallow racine = aucun crawl', function (): void {
     Http::fake([
         'boulangerie-dupont.fr/robots.txt' => Http::response("User-agent: *\nDisallow: /\n"),

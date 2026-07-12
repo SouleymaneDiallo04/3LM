@@ -61,30 +61,52 @@ class WebsiteCrawler
             return ['status' => 'social_only', 'fields' => 1];
         }
 
-        // Garde SSRF : ne jamais laisser une valeur du champ « website »
-        // (issue de SIRENE ou d'OSM, éditable par des tiers) diriger le
-        // serveur vers une cible interne — métadonnées cloud, réseau privé.
+        // Garde SSRF (rejet rapide) : ne jamais laisser une valeur du champ
+        // « website » (SIRENE/OSM, éditable par des tiers) diriger le serveur
+        // vers une cible interne — métadonnées cloud, réseau privé.
         if ($this->hostIsBlocked($host)) {
             $establishment->update(['crawled_at' => now()]);
 
             return ['status' => 'blocked', 'fields' => 0];
         }
 
+        // Nettoyage d'URL : beaucoup de « website » SIRENE sont muets sur la
+        // forme exacte mais répondent sur une variante (http→https, www↔apex).
+        // On essaie les candidats dans l'ordre — un site sain répond du
+        // premier coup, sans requête superflue.
+        $response = null;
+        $disallowed = false;
+        // Schéma/hôte effectivement retenus — servent à résoudre l'URL du
+        // formulaire de contact en absolu.
         $scheme = parse_url((string) $url, PHP_URL_SCHEME) ?: 'https';
 
-        if (! $this->allowedByRobots($scheme, $host)) {
-            // Marqué crawlé : un site interdit ne doit pas être retenté en boucle.
-            $establishment->update(['crawled_at' => now()]);
+        foreach ($this->urlCandidates((string) $url) as $candidate) {
+            $cHost = (string) parse_url($candidate, PHP_URL_HOST);
+            $cScheme = parse_url($candidate, PHP_URL_SCHEME) ?: 'https';
 
-            return ['status' => 'disallowed', 'fields' => 0];
+            if ($this->hostIsBlocked($cHost)) {
+                continue;
+            }
+            if (! $this->allowedByRobots($cScheme, $cHost)) {
+                $disallowed = true;
+
+                continue;
+            }
+
+            $r = $this->safeGet($candidate);
+            if ($r !== null && $r->successful()) {
+                $response = $r;
+                $scheme = $cScheme;
+                $host = $cHost;
+                break;
+            }
         }
 
-        $response = $this->safeGet((string) $url);
-
-        if ($response === null || ! $response->successful()) {
+        if ($response === null) {
+            // Marqué crawlé : ni retenter en boucle un site muet, ni un interdit.
             $establishment->update(['crawled_at' => now()]);
 
-            return ['status' => $response === null ? 'blocked' : 'error', 'fields' => 0];
+            return ['status' => $disallowed ? 'disallowed' : 'error', 'fields' => 0];
         }
 
         $html = substr($response->body(), 0, 800_000);
@@ -356,6 +378,36 @@ class WebsiteCrawler
         }
 
         return $links;
+    }
+
+    /**
+     * Variantes d'URL à tenter, dans l'ordre (originale d'abord) : passage
+     * en https si http, bascule www↔apex. Dédupliquées, plafonnées à 3 —
+     * un site sain répond dès la première, sans requête inutile.
+     *
+     * @return list<string>
+     */
+    private function urlCandidates(string $url): array
+    {
+        $scheme = parse_url($url, PHP_URL_SCHEME) ?: 'https';
+        $host = (string) parse_url($url, PHP_URL_HOST);
+        $path = parse_url($url, PHP_URL_PATH) ?: '';
+        if ($host === '') {
+            return [$url];
+        }
+
+        $httpsHost = fn (string $h): string => "https://{$h}{$path}";
+        $toggleWww = str_starts_with($host, 'www.')
+            ? substr($host, 4)
+            : 'www.'.$host;
+
+        $candidates = [
+            $url,
+            $scheme === 'http' ? $httpsHost($host) : null,
+            $httpsHost($toggleWww),
+        ];
+
+        return array_values(array_slice(array_unique(array_filter($candidates)), 0, 3));
     }
 
     /** Réseau social correspondant à un hôte, ou null. */
