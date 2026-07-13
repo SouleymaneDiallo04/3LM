@@ -21,3 +21,13 @@ it('lève sur échec HTTP', function (): void {
     Http::fake(['api.mistral.ai/*' => Http::response('nope', 500)]);
     expect(fn () => (new MistralEmbeddingClient)->embed('x'))->toThrow(RequestException::class);
 });
+
+it('rejoue sur une limitation de débit (429) puis réussit', function (): void {
+    config(['services.mistral.key' => 'k-test']);
+    // 429 (rate limit) puis 200 : le rejeu doit aboutir au vecteur.
+    Http::fake(['api.mistral.ai/*' => Http::sequence()
+        ->push('rate limited', 429)
+        ->push(['data' => [['embedding' => [0.5, 0.6]]]], 200)]);
+
+    expect((new MistralEmbeddingClient)->embed('x'))->toBe([0.5, 0.6]);
+});
