@@ -46,9 +46,12 @@ it('renvoie les prospects similaires classés, sans soi ni le même SIREN', func
 
     $sirets = array_column($data, 'siret');
     expect($sirets)->toContain('20000000200022')          // proche présent
+        ->and($sirets)->toContain('30000000300033')       // lointaine présente
         ->and($sirets)->not->toContain('10000000100011')  // pas soi
         ->and($sirets)->not->toContain('10000000100029')  // pas le même SIREN
-        ->and($sirets[0])->toBe('20000000200022');         // proche avant lointaine
+        ->and($sirets[0])->toBe('20000000200022')          // proche en tête
+        ->and(array_search('20000000200022', $sirets, true))
+        ->toBeLessThan(array_search('30000000300033', $sirets, true)); // proche classé avant lointaine
 });
 
 it('exclut les fiches non-diffusibles des résultats (RGPD)', function (): void {

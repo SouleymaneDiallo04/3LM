@@ -3,7 +3,6 @@
 namespace App\Services\Ai;
 
 use App\Models\Establishment;
-use App\Services\Ai\Exceptions\AiGenerationDenied;
 use App\Services\Scoring\ScoringService;
 use Illuminate\Support\Facades\DB;
 
