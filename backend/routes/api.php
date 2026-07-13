@@ -66,6 +66,8 @@ Route::prefix('v1')->group(function (): void {
                 ->name('companies.summary');
             Route::post('companies/{establishment}/pitch', [AiController::class, 'pitch'])
                 ->name('companies.pitch');
+            Route::get('companies/{establishment}/similar', [AiController::class, 'similar'])
+                ->name('companies.similar');
 
             // Référentiel régions/départements pour les filtres (EF-01.2).
             Route::get('referentiels', [ReferentialController::class, 'index'])
