@@ -63,7 +63,9 @@ services:
     networks: [fbde]
 
   postgres:
-    image: postgis/postgis:16-3.4
+    build:
+      context: ./docker/postgres
+    image: fbde-postgres:16
     container_name: fbde_postgres
     environment:
       POSTGRES_DB: fbde

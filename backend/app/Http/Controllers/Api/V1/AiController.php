@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Establishment;
 use App\Services\Ai\CompanySummarizer;
 use App\Services\Ai\Exceptions\AiGenerationDenied;
+use App\Services\Ai\Exceptions\NotIndexed;
 use App\Services\Ai\PitchGenerator;
 use App\Services\Ai\Prompts;
+use App\Services\Ai\SimilarProspects;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -92,5 +94,18 @@ class AiController extends Controller
             'channel' => $validated['channel'],
             'version' => Prompts::VERSION,
         ]]);
+    }
+
+    public function similar(Establishment $establishment, SimilarProspects $service): JsonResponse
+    {
+        try {
+            $data = $service->for($establishment);
+        } catch (AiGenerationDenied $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        } catch (NotIndexed $e) {
+            return response()->json(['message' => $e->getMessage(), 'not_indexed' => true], 422);
+        }
+
+        return response()->json(['data' => $data]);
     }
 }

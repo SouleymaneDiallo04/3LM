@@ -60,6 +60,17 @@ class Prompts
         ];
     }
 
+    /** Texte à embedder (EF-08.3) : mêmes données minimisées RGPD que le résumé. */
+    public function embeddingText(Establishment $e): string
+    {
+        $text = $this->minimizedFacts($e);
+        if (($desc = $this->sanitizeUntrusted($e->description)) !== null) {
+            $text .= "\n".$desc;
+        }
+
+        return $text;
+    }
+
     /** Champs utiles à la prose uniquement — jamais d'identifiant national. */
     private function minimizedFacts(Establishment $e): string
     {
