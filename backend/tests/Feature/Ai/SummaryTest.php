@@ -39,6 +39,21 @@ it('expose le résumé et un indicateur de péremption dans la fiche', function 
         ->and($data['ai_summary_stale'])->toBeTrue(); // enriched_at > ai_summary_at
 });
 
+it('masque le résumé mémorisé sur une fiche devenue non-diffusible (RGPD, lecture)', function (): void {
+    // Cohérence avec la garde de génération : le chemin de lecture ne doit pas
+    // servir un résumé IA stocké si l'unité légale est passée non-diffusible.
+    $this->e->update(['ai_summary' => 'Résumé.', 'ai_summary_version' => '1.0.0', 'ai_summary_at' => now()]);
+    $this->e->company->update(['is_diffusible' => false]);
+    $id = $this->e->id;
+
+    $data = $this->actingAs($this->user)->getJson("/api/v1/companies/{$id}")->json('data');
+
+    expect($data['ai_summary'])->toBeNull()
+        ->and($data['ai_summary_version'])->toBeNull()
+        ->and($data['ai_summary_at'])->toBeNull()
+        ->and($data['ai_summary_stale'])->toBeFalse();
+});
+
 it('génère, stocke et renvoie le résumé (EF-08.2)', function (): void {
     app(FakeAiClient::class)->response = 'Boulangerie artisanale à Bordeaux.';
     $id = $this->e->id;

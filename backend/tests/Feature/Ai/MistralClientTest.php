@@ -1,6 +1,5 @@
 <?php
 
-// backend/tests/Feature/Ai/MistralClientTest.php
 use App\Services\Ai\MistralClient;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;

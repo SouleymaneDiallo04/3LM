@@ -66,6 +66,6 @@ return [
         'driver' => env('FBDE_AI_DRIVER', 'fake'), // fake | mistral
         'model' => env('FBDE_AI_MODEL', 'mistral-small-latest'),
         'endpoint' => env('FBDE_AI_ENDPOINT', 'https://api.mistral.ai/v1/chat/completions'),
-        'max_description_chars' => 1000,
+        'max_description_chars' => (int) env('FBDE_AI_MAX_DESCRIPTION_CHARS', 1000),
     ],
 ];

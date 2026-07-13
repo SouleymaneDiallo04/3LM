@@ -1,7 +1,5 @@
 <?php
 
-// backend/app/Services/Ai/MistralClient.php
-
 namespace App\Services\Ai;
 
 use App\Services\Ai\Contracts\AiClient;

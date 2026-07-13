@@ -19,6 +19,12 @@ class EstablishmentResource extends JsonResource
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
+        // Cohérence RGPD avec la garde de génération : si l'unité légale est
+        // devenue non-diffusible, on ne sert plus le résumé IA mémorisé. On ne
+        // masque que ce cas explicite (relation chargée + is_diffusible faux),
+        // sans changer le comportement des vues où la relation n'est pas chargée.
+        $aiHidden = $this->relationLoaded('company') && $this->company?->is_diffusible === false;
+
         return [
             'id' => $this->id,
             'siret' => $this->siret,
@@ -70,11 +76,11 @@ class EstablishmentResource extends JsonResource
             'imported_at' => $this->imported_at?->toIso8601String(),
             'enriched_at' => $this->enriched_at?->toIso8601String(),
             'crawled_at' => $this->crawled_at?->toIso8601String(),
-            'ai_summary' => $this->ai_summary,
-            'ai_summary_version' => $this->ai_summary_version,
-            'ai_summary_at' => $this->ai_summary_at?->toIso8601String(),
+            'ai_summary' => $aiHidden ? null : $this->ai_summary,
+            'ai_summary_version' => $aiHidden ? null : $this->ai_summary_version,
+            'ai_summary_at' => $aiHidden ? null : $this->ai_summary_at?->toIso8601String(),
             // Péremption : la fiche a été enrichie/crawlée après le résumé.
-            'ai_summary_stale' => $this->ai_summary_at !== null && (
+            'ai_summary_stale' => ! $aiHidden && $this->ai_summary_at !== null && (
                 ($this->enriched_at !== null && $this->enriched_at->gt($this->ai_summary_at))
                 || ($this->crawled_at !== null && $this->crawled_at->gt($this->ai_summary_at))
             ),
