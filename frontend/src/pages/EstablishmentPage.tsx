@@ -29,14 +29,17 @@ export default function EstablishmentPage() {
   const e = establishment
 
   return (
-    <div>
-      <Link to="/recherche" className="text-sm text-sky-700 hover:underline">
-        ← Retour à la recherche
+    <div className="mx-auto max-w-6xl">
+      <Link
+        to="/recherche"
+        className="inline-flex items-center gap-1 text-sm text-sky-700 transition-colors hover:text-sky-800"
+      >
+        <span aria-hidden="true">←</span> Retour à la recherche
       </Link>
 
-      <div className="mt-3 flex items-start justify-between">
+      <div className="mt-3 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900">
             {e.name ?? e.company?.legal_name ?? 'Établissement'}
           </h1>
           <p className="mt-0.5 font-mono text-sm text-slate-500">SIRET {e.siret}</p>
@@ -58,7 +61,7 @@ export default function EstablishmentPage() {
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <CompanySummary establishment={e} />
 
-        <section className="rounded-xl border border-slate-200 bg-white p-4">
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-sm font-semibold text-slate-900">Établissement</h2>
           <dl className="mt-2 space-y-1.5 text-sm">
             <Row label="Activité (NAF)" value={e.naf_code} />
@@ -82,7 +85,7 @@ export default function EstablishmentPage() {
           </dl>
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-4">
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-sm font-semibold text-slate-900">Unité légale</h2>
           <dl className="mt-2 space-y-1.5 text-sm">
             <Row label="Dénomination" value={e.company?.legal_name} />
@@ -92,7 +95,7 @@ export default function EstablishmentPage() {
           </dl>
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-4">
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-sm font-semibold text-slate-900">Contact</h2>
           <dl className="mt-2 space-y-1.5 text-sm">
             <Row label="Téléphone" value={e.contact.phone} />
@@ -133,7 +136,7 @@ export default function EstablishmentPage() {
           </dl>
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-4">
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-sm font-semibold text-slate-900">Scores</h2>
           <dl className="mt-2 space-y-1.5 text-sm">
             <div className="flex justify-between gap-4">
@@ -176,7 +179,7 @@ export default function EstablishmentPage() {
 
         <PitchPanel establishment={e} />
 
-        <section className="rounded-xl border border-slate-200 bg-white p-4 md:col-span-2">
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:col-span-2">
           <h2 className="text-sm font-semibold text-slate-900">Collecte des données</h2>
           <dl className="mt-2 space-y-1.5 text-sm">
             <Row
