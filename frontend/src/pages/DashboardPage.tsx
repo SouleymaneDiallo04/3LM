@@ -101,7 +101,7 @@ export default function DashboardPage() {
               sur {fr(kpis.total_establishments)} au total · {kpis.geocoding_rate}% géolocalisés
             </p>
           </div>
-          <dl className="mt-6 grid grid-cols-3 gap-4 border-t border-slate-100 pt-4">
+          <dl className="mt-6 grid grid-cols-2 gap-4 border-t border-slate-100 pt-4 sm:grid-cols-3">
             <InlineStat label="Total de la base" value={fr(kpis.total_establishments)} />
             <InlineStat label="Nouveaux contacts (30 j)" value={fr(kpis.new_contacts_30_days)} />
             <InlineStat label="Fiches enrichies" value={fr(kpis.enriched)} />
