@@ -59,6 +59,14 @@ jobs:
           cp .env.example .env
           php artisan key:generate
 
+      # pgvector (EF-08.3) : les service containers GitHub n'acceptent qu'une
+      # image publiée. On installe le paquet dans le conteneur postgis au runtime,
+      # avant les migrations (l'extension « vector » est créée par une migration).
+      - name: Installer pgvector dans le service Postgres
+        run: |
+          CID=$(docker ps --filter "ancestor=postgis/postgis:16-3.4" --format '{{.ID}}' | head -n1)
+          docker exec "$CID" bash -c "apt-get update && apt-get install -y --no-install-recommends postgresql-16-pgvector"
+
       - name: Tests (Pest)
         env:
           DB_CONNECTION: pgsql
