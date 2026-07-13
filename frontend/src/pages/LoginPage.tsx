@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { isAxiosError } from 'axios'
 import BrandMark from '../components/BrandMark'
+import LoginBackdrop from './LoginBackdrop'
 import { useAuth } from '../features/auth/AuthContext'
 
 export default function LoginPage() {
@@ -41,19 +42,15 @@ export default function LoginPage() {
     <main className="flex min-h-screen bg-white">
       {/* Panneau de marque (≥ md) : navy + trame de points évoquant les
           établissements géolocalisés. Le formulaire reste seul sur mobile. */}
-      <section
-        className="relative hidden w-3/5 flex-col justify-between overflow-hidden bg-slate-900 p-12 md:flex"
-        style={{
-          backgroundImage:
-            'radial-gradient(rgb(255 255 255 / 0.05) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }}
-      >
+      <section className="relative hidden w-3/5 flex-col justify-between overflow-hidden bg-slate-900 p-12 md:flex">
+        {/* Maillage animé des points géolocalisés (décoratif). */}
+        <LoginBackdrop />
+
         {/* Halo d'accent discret, ancré en bas à gauche. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -bottom-32 -left-24 h-96 w-96 rounded-full"
-          style={{ background: 'radial-gradient(circle, rgb(2 132 199 / 0.18), transparent 70%)' }}
+          className="pointer-events-none absolute -bottom-32 -left-24 z-0 h-96 w-96 rounded-full"
+          style={{ background: 'radial-gradient(circle, rgb(2 132 199 / 0.2), transparent 70%)' }}
         />
 
         <div className="relative flex items-center gap-3">
