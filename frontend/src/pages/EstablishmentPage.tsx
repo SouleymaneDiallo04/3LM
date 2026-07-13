@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
+import CompanySummary from '../features/ai/CompanySummary'
+import PitchPanel from '../features/ai/PitchPanel'
 import { getEstablishment } from '../features/catalog/api'
 import type { Establishment } from '../lib/types'
 
@@ -54,6 +56,8 @@ export default function EstablishmentPage() {
       </div>
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <CompanySummary establishment={e} />
+
         <section className="rounded-xl border border-slate-200 bg-white p-4">
           <h2 className="text-sm font-semibold text-slate-900">Établissement</h2>
           <dl className="mt-2 space-y-1.5 text-sm">
@@ -169,6 +173,8 @@ export default function EstablishmentPage() {
             />
           </dl>
         </section>
+
+        <PitchPanel establishment={e} />
 
         <section className="rounded-xl border border-slate-200 bg-white p-4 md:col-span-2">
           <h2 className="text-sm font-semibold text-slate-900">Collecte des données</h2>

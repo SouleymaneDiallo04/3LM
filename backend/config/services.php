@@ -44,4 +44,8 @@ return [
         'batch_size' => env('BAN_BATCH_SIZE', 1000),
     ],
 
+    'mistral' => [
+        'key' => env('MISTRAL_API_KEY'),
+    ],
+
 ];

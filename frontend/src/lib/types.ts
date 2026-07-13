@@ -43,6 +43,10 @@ export interface Establishment {
   imported_at: string | null
   enriched_at: string | null
   crawled_at?: string | null
+  ai_summary?: string | null
+  ai_summary_version?: string | null
+  ai_summary_at?: string | null
+  ai_summary_stale?: boolean
 }
 
 /** Réponse paginée par curseur (§9.2). */

@@ -19,6 +19,67 @@
   --font-mono: 'Fira Code', ui-monospace, 'Cascadia Mono', monospace;
 }
 
+/*
+ * Générations IA (EF-08) — le « moment » de la fiche.
+ * Révélation progressive du texte généré (fondu par mot) et squelette
+ * shimmer pendant le chargement. Mouvement neutralisé si l'utilisateur
+ * a demandé à réduire les animations (accessibilité).
+ */
+@keyframes fbde-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.fbde-word {
+  display: inline-block;
+  white-space: pre;
+  animation: fbde-reveal 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fbde-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.fbde-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgb(241 245 249); /* slate-100 */
+}
+
+.fbde-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.65),
+    transparent
+  );
+  animation: fbde-shimmer 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fbde-word {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .fbde-skeleton::after {
+    animation: none;
+  }
+}
+
 /* Agrégats de la carte (EF-06.3) : disque accent, compteur centré.
    Défini ici car injecté par Leaflet via divIcon, hors du scan Tailwind. */
 .fbde-cluster div {

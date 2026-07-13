@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - **Aucun test ne dépend du réseau** : `config('fbde.ai.driver')` vaut `fake` par défaut ; les tests utilisent `FakeAiClient`. Les tests de `MistralClient` utilisent `Http::fake()` (façonnage de requête, pas d'appel réel).
-- **RGPD** : jamais de SIRET/SIREN dans un prompt ; refus de générer pour une fiche `is_diffusible = false` ou présente dans `exclusion_list` (par SIREN ou SIRET).
+- **RGPD** : jamais de SIRET/SIREN dans un prompt ; refus de générer quand l'unité légale est non-diffusible (`companies.is_diffusible = false`) ou présente dans `exclusion_list` (par SIREN ou SIRET). Note : `is_diffusible` est porté par la table `companies`, pas `establishments` — la garde passe par la relation `company`.
 - **Injection de prompt** : la `description` (issue du crawl) est encadrée `<donnees_site_non_verifiees>…</…>`, tronquée à `config('fbde.ai.max_description_chars')` (1000), motifs d'injection neutralisés.
 - **Versionnement** : `App\Services\Ai\Prompts::VERSION` tracé sur chaque sortie.
 - **Substituabilité** : le code métier ne dépend que de `AiClient`, jamais de Mistral directement.
@@ -528,7 +528,7 @@ beforeEach(function (): void {
         'siret' => '11111111100011', 'company_id' => $company->id,
         'name' => 'Boulangerie Dupont', 'normalized_name' => 'boulangerie dupont',
         'status' => 'active', 'naf_code' => '10.71C', 'city' => 'BORDEAUX',
-        'department_code' => '33', 'is_diffusible' => true,
+        'department_code' => '33',
     ]);
 });
 
@@ -662,7 +662,8 @@ it('renvoie le cache sans rappeler l\'IA, sauf refresh', function (): void {
 });
 
 it('refuse la génération pour une fiche non-diffusible (RGPD)', function (): void {
-    $this->e->update(['is_diffusible' => false]);
+    // is_diffusible est porté par l'unité légale (table companies).
+    $this->e->company->update(['is_diffusible' => false]);
     $id = $this->e->id;
 
     $this->actingAs($this->user)->postJson("/api/v1/companies/{$id}/summary")
@@ -746,7 +747,8 @@ class CompanySummarizer
     /** Garde RGPD : refus si non-diffusible ou présent en liste d'exclusion. */
     public function assertAllowed(Establishment $establishment): void
     {
-        if ($establishment->is_diffusible === false) {
+        // Le statut de diffusion SIRENE est porté par l'unité légale (companies).
+        if ($establishment->company?->is_diffusible === false) {
             throw new AiGenerationDenied('Fiche non-diffusible : génération IA non autorisée.');
         }
 
@@ -876,7 +878,7 @@ beforeEach(function (): void {
         'siret' => '11111111100011', 'company_id' => $company->id,
         'name' => 'Boulangerie Dupont', 'normalized_name' => 'boulangerie dupont',
         'status' => 'active', 'naf_code' => '10.71C', 'city' => 'BORDEAUX',
-        'department_code' => '33', 'is_diffusible' => true,
+        'department_code' => '33',
     ]);
 });
 
@@ -903,7 +905,8 @@ it('valide le canal', function (): void {
 });
 
 it('refuse l\'argumentaire pour une fiche non-diffusible (RGPD)', function (): void {
-    $this->e->update(['is_diffusible' => false]);
+    // is_diffusible est porté par l'unité légale (table companies).
+    $this->e->company->update(['is_diffusible' => false]);
     $id = $this->e->id;
     $this->actingAs($this->user)
         ->postJson("/api/v1/companies/{$id}/pitch", ['channel' => 'call'])
@@ -1019,20 +1022,25 @@ use Database\Seeders\RoleSeeder;
 
 beforeEach(function (): void {
     $this->seed([RoleSeeder::class, RegionSeeder::class, DepartmentSeeder::class]);
-    $company = Company::create([
+    // is_diffusible est porté par l'unité légale : une company diffusible, une non.
+    $diffusible = Company::create([
         'siren' => '111111111', 'legal_name' => 'Dupont SAS',
-        'normalized_name' => 'dupont', 'status' => 'active',
+        'normalized_name' => 'dupont', 'status' => 'active', 'is_diffusible' => true,
+    ]);
+    $nonDiffusible = Company::create([
+        'siren' => '222222222', 'legal_name' => 'Martin EI',
+        'normalized_name' => 'martin', 'status' => 'active', 'is_diffusible' => false,
     ]);
     Establishment::create([
-        'siret' => '11111111100011', 'company_id' => $company->id,
+        'siret' => '11111111100011', 'company_id' => $diffusible->id,
         'name' => 'A', 'normalized_name' => 'a', 'status' => 'active',
-        'city' => 'BORDEAUX', 'department_code' => '33', 'is_diffusible' => true,
+        'city' => 'BORDEAUX', 'department_code' => '33',
     ]);
-    // Non-diffusible : ignorée par la commande.
+    // Unité légale non-diffusible : ignorée par la commande.
     Establishment::create([
-        'siret' => '11111111100029', 'company_id' => $company->id,
+        'siret' => '22222222200011', 'company_id' => $nonDiffusible->id,
         'name' => 'B', 'normalized_name' => 'b', 'status' => 'active',
-        'city' => 'BORDEAUX', 'department_code' => '33', 'is_diffusible' => false,
+        'city' => 'BORDEAUX', 'department_code' => '33',
     ]);
 });
 
@@ -1043,7 +1051,7 @@ it('pré-génère les résumés diffusibles et trace l\'exécution', function ()
         ->assertSuccessful();
 
     expect(Establishment::where('siret', '11111111100011')->value('ai_summary'))->toBe('Résumé batch.')
-        ->and(Establishment::where('siret', '11111111100029')->value('ai_summary'))->toBeNull();
+        ->and(Establishment::where('siret', '22222222200011')->value('ai_summary'))->toBeNull();
 
     $import = Import::latest('id')->firstOrFail();
     expect($import->source)->toBe('ai_summary')
@@ -1092,7 +1100,8 @@ class SummarizeCompaniesCommand extends Command
         try {
             Establishment::query()
                 ->where('status', 'active')
-                ->where('is_diffusible', true)
+                // is_diffusible est porté par l'unité légale (companies).
+                ->whereHas('company', fn ($q) => $q->where('is_diffusible', true))
                 ->whereNull('ai_summary')
                 ->when($this->option('department'), fn ($q, $d) => $q->where('department_code', $d))
                 ->with('company')
