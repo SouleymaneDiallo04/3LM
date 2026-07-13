@@ -72,15 +72,15 @@ export default function UsersPage() {
   }
 
   return (
-    <div>
-      <h1 className="text-xl font-semibold text-slate-900">Utilisateurs</h1>
+    <div className="mx-auto max-w-6xl">
+      <h1 className="text-lg font-semibold tracking-tight text-slate-900">Utilisateurs</h1>
       <p className="mt-1 text-sm text-slate-500">
         Comptes de la plateforme — rôles, double authentification, désactivation.
       </p>
 
       <form
         onSubmit={handleCreate}
-        className="mt-4 grid grid-cols-2 items-end gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-5"
+        className="mt-4 grid grid-cols-2 items-end gap-3 rounded-xl border border-slate-200 bg-white shadow-sm p-4 md:grid-cols-5"
       >
         <label className="text-sm">
           <span className="text-slate-600">Nom</span>
@@ -89,7 +89,7 @@ export default function UsersPage() {
             required
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-xs transition-colors duration-150 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           />
         </label>
         <label className="text-sm">
@@ -99,7 +99,7 @@ export default function UsersPage() {
             required
             value={form.email}
             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-xs transition-colors duration-150 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           />
         </label>
         <label className="text-sm">
@@ -110,7 +110,7 @@ export default function UsersPage() {
             minLength={12}
             value={form.password}
             onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-xs transition-colors duration-150 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           />
         </label>
         <label className="text-sm">
@@ -118,7 +118,7 @@ export default function UsersPage() {
           <select
             value={form.role}
             onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-xs transition-colors duration-150 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           >
             {ROLES.map((r) => (
               <option key={r} value={r}>{r}</option>
@@ -138,7 +138,7 @@ export default function UsersPage() {
         <p role="alert" className="mt-3 text-sm text-red-600">{error}</p>
       )}
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
@@ -167,7 +167,7 @@ export default function UsersPage() {
                     value={u.roles[0] ?? ''}
                     disabled={u.id === me?.id}
                     onChange={(e) => void handleRole(u, e.target.value)}
-                    className="rounded-md border border-slate-300 px-2 py-1 disabled:bg-slate-50 disabled:text-slate-400"
+                    className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm transition-colors focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none disabled:bg-slate-50 disabled:text-slate-400"
                   >
                     {ROLES.map((r) => (
                       <option key={r} value={r}>{r}</option>
