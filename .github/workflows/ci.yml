@@ -60,12 +60,21 @@ jobs:
           php artisan key:generate
 
       # pgvector (EF-08.3) : les service containers GitHub n'acceptent qu'une
-      # image publiée. On installe le paquet dans le conteneur postgis au runtime,
-      # avant les migrations (l'extension « vector » est créée par une migration).
+      # image publiée. On installe le paquet dans le conteneur postgis au runtime.
+      # L'installation met à jour le serveur PostgreSQL : on aligne server +
+      # postgis + contrib sur la même version, PUIS on redémarre le conteneur pour
+      # que le serveur reparte sur des binaires cohérents (sinon « undefined
+      # symbol » : ancien serveur en mémoire + nouvelles bibliothèques sur disque).
       - name: Installer pgvector dans le service Postgres
         run: |
           CID=$(docker ps --filter "ancestor=postgis/postgis:16-3.4" --format '{{.ID}}' | head -n1)
-          docker exec "$CID" bash -c "apt-get update && apt-get install -y --no-install-recommends postgresql-16-pgvector"
+          docker exec "$CID" bash -c "apt-get update && apt-get install -y --no-install-recommends postgresql-16 postgresql-16-postgis-3 postgresql-16-pgvector"
+          docker restart "$CID"
+          for i in $(seq 1 40); do
+            docker exec "$CID" pg_isready -U fbde && break
+            sleep 2
+          done
+          docker exec "$CID" psql -U fbde -d fbde_test -c "CREATE EXTENSION IF NOT EXISTS postgis; CREATE EXTENSION IF NOT EXISTS pg_trgm; CREATE EXTENSION IF NOT EXISTS vector; SELECT '[1,0]'::vector(2) <=> '[0,1]'::vector(2);"
 
       - name: Tests (Pest)
         env:
