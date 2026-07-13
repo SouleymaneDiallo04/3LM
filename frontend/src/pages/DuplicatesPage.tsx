@@ -53,8 +53,8 @@ export default function DuplicatesPage() {
   }
 
   return (
-    <div>
-      <h1 className="text-xl font-semibold text-slate-900">Revue des doublons</h1>
+    <div className="mx-auto max-w-6xl">
+      <h1 className="text-lg font-semibold tracking-tight text-slate-900">Revue des doublons</h1>
       <p className="mt-1 text-sm text-slate-500">
         Paires probables (même ville, dénominations proches, SIREN différents). Choisissez la
         fiche à conserver — elle récupère les données manquantes — ou déclarez-les distinctes.
@@ -64,7 +64,7 @@ export default function DuplicatesPage() {
 
       {pairs === null && <p className="mt-4 text-sm text-slate-500">Chargement…</p>}
       {pairs?.length === 0 && (
-        <div className="mt-4 rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
+        <div className="mt-4 rounded-xl border border-slate-200 bg-white shadow-sm p-6 text-center text-sm text-slate-500">
           Aucune paire en attente. Lancez la détection avec{' '}
           <code className="font-mono text-slate-700">fbde:duplicates:detect</code>.
         </div>
@@ -72,7 +72,7 @@ export default function DuplicatesPage() {
 
       <div className="mt-4 space-y-3">
         {(pairs ?? []).map((pair) => (
-          <div key={pair.id} className="rounded-xl border border-slate-200 bg-white p-4">
+          <div key={pair.id} className="rounded-xl border border-slate-200 bg-white shadow-sm p-4">
             <div className="mb-3 flex items-center justify-between">
               <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
                 Similarité{' '}
@@ -113,7 +113,7 @@ function SideCard({
   onKeep: (action: () => Promise<void>, pairId: number) => Promise<void>
 }) {
   return (
-    <div className="flex flex-col rounded-lg border border-slate-200 p-3">
+    <div className="flex flex-col rounded-lg border border-slate-200 bg-slate-50/60 p-4">
       <p className="font-medium text-slate-900">{side.name ?? '—'}</p>
       <p className="font-mono text-xs text-slate-500">SIRET {side.siret}</p>
       <dl className="mt-2 flex-1 space-y-1 text-sm text-slate-600">
