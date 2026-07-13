@@ -67,5 +67,8 @@ return [
         'model' => env('FBDE_AI_MODEL', 'mistral-small-latest'),
         'endpoint' => env('FBDE_AI_ENDPOINT', 'https://api.mistral.ai/v1/chat/completions'),
         'max_description_chars' => (int) env('FBDE_AI_MAX_DESCRIPTION_CHARS', 1000),
+        'embedding_model' => env('FBDE_AI_EMBEDDING_MODEL', 'mistral-embed'),
+        'embedding_endpoint' => env('FBDE_AI_EMBEDDING_ENDPOINT', 'https://api.mistral.ai/v1/embeddings'),
+        'embedding_dimensions' => 1024,
     ],
 ];
