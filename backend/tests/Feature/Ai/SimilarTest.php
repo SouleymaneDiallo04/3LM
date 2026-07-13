@@ -63,6 +63,22 @@ it('exclut les fiches non-diffusibles des résultats (RGPD)', function (): void 
     expect($sirets)->not->toContain('40000000400044');
 });
 
+it('exclut des résultats un candidat en liste d\'exclusion (RGPD droit d\'opposition)', function (): void {
+    // Candidat proche et diffusible, mais son SIREN est en liste d'exclusion.
+    $opposeSiren = mkEstab('600000006', '60000000600066');
+    seedVec($opposeSiren, [0.96, 0.04, 0]);
+    DB::table('exclusion_list')->insert(['identifier_type' => 'siren', 'identifier_value' => '600000006', 'reason' => 'opposition', 'created_at' => now(), 'updated_at' => now()]);
+    // Candidat proche et diffusible, mais son SIRET est en liste d'exclusion.
+    $opposeSiret = mkEstab('700000007', '70000000700077');
+    seedVec($opposeSiret, [0.97, 0.03, 0]);
+    DB::table('exclusion_list')->insert(['identifier_type' => 'siret', 'identifier_value' => '70000000700077', 'reason' => 'opposition', 'created_at' => now(), 'updated_at' => now()]);
+    $id = $this->ref->id;
+
+    $sirets = array_column($this->actingAs($this->user)->getJson("/api/v1/companies/{$id}/similar")->json('data'), 'siret');
+    expect($sirets)->not->toContain('60000000600066')   // exclu par SIREN
+        ->and($sirets)->not->toContain('70000000700077'); // exclu par SIRET
+});
+
 it('renvoie 422 si la fiche courante n\'a pas d\'embedding', function (): void {
     $bare = mkEstab('500000005', '50000000500055'); // pas de seedVec
     $this->actingAs($this->user)->getJson("/api/v1/companies/{$bare->id}/similar")->assertStatus(422);
