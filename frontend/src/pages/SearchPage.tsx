@@ -170,15 +170,15 @@ export default function SearchPage() {
   }
 
   return (
-    <div>
-      <h1 className="text-xl font-semibold text-slate-900">Recherche d'entreprises</h1>
+    <div className="mx-auto max-w-6xl">
+      <h1 className="text-lg font-semibold tracking-tight text-slate-900">Recherche d'entreprises</h1>
       <p className="mt-1 text-sm text-slate-500">
         Base SIRENE — critères combinables librement.
       </p>
 
       <form
         onSubmit={handleSubmit}
-        className="mt-4 grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-4"
+        className="mt-4 grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-white shadow-sm p-4 md:grid-cols-4"
       >
         <label className="text-sm">
           <span className="text-slate-600">Mot-clé (nom)</span>
@@ -187,7 +187,7 @@ export default function SearchPage() {
             value={filters.q ?? ''}
             onChange={(e) => set({ q: e.target.value })}
             placeholder="boulangerie, garage…"
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-xs transition-colors duration-150 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           />
         </label>
         <label className="text-sm">
@@ -195,7 +195,7 @@ export default function SearchPage() {
           <select
             value={filters.region ?? ''}
             onChange={(e) => set({ region: e.target.value || undefined, department: undefined })}
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-xs transition-colors duration-150 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           >
             <option value="">Toutes</option>
             {regions.map((r) => (
@@ -208,7 +208,7 @@ export default function SearchPage() {
           <select
             value={filters.department ?? ''}
             onChange={(e) => set({ department: e.target.value || undefined })}
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-xs transition-colors duration-150 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           >
             <option value="">Tous</option>
             {(filters.region
@@ -226,7 +226,7 @@ export default function SearchPage() {
             value={filters.postal_code ?? ''}
             onChange={(e) => set({ postal_code: e.target.value || undefined })}
             placeholder="33000"
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-xs transition-colors duration-150 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           />
         </label>
         <label className="text-sm">
@@ -236,7 +236,7 @@ export default function SearchPage() {
             value={filters.city ?? ''}
             onChange={(e) => set({ city: e.target.value })}
             placeholder="BORDEAUX"
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-xs transition-colors duration-150 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           />
         </label>
         <label className="text-sm">
@@ -246,7 +246,7 @@ export default function SearchPage() {
             value={filters.naf ?? ''}
             onChange={(e) => set({ naf: e.target.value })}
             placeholder="10.71C ou 45"
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-xs transition-colors duration-150 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none"
           />
         </label>
 
@@ -280,7 +280,7 @@ export default function SearchPage() {
             <select
               value={filters.min_rating ?? ''}
               onChange={(e) => set({ min_rating: e.target.value ? Number(e.target.value) : undefined })}
-              className="rounded-md border border-slate-300 px-2 py-1 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+              className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm shadow-xs transition-colors duration-150 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none"
             >
               <option value="">—</option>
               {[3, 3.5, 4, 4.5].map((n) => (
@@ -303,7 +303,7 @@ export default function SearchPage() {
             <select
               value={filters.min_tier ?? ''}
               onChange={(e) => set({ min_tier: (e.target.value || undefined) as typeof filters.min_tier })}
-              className="rounded-md border border-slate-300 px-2 py-1 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+              className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm shadow-xs transition-colors duration-150 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none"
             >
               <option value="">Tous</option>
               <option value="A">Palier A (excellents)</option>
@@ -316,7 +316,7 @@ export default function SearchPage() {
             <select
               value={filters.min_employees ?? ''}
               onChange={(e) => set({ min_employees: e.target.value || undefined })}
-              className="rounded-md border border-slate-300 px-2 py-1 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+              className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm shadow-xs transition-colors duration-150 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none"
             >
               <option value="">Tous</option>
               <option value="01">1 salarié et +</option>
@@ -336,7 +336,7 @@ export default function SearchPage() {
                   direction: e.target.value === 'name' ? 'asc' : 'desc',
                 })
               }
-              className="rounded-md border border-slate-300 px-2 py-1 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+              className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm shadow-xs transition-colors duration-150 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none"
             >
               <option value="">Pertinence</option>
               <option value="name">Nom (A→Z)</option>
@@ -363,7 +363,7 @@ export default function SearchPage() {
             <select
               value={selectedFilterId}
               onChange={(e) => applySavedFilter(e.target.value === '' ? '' : Number(e.target.value))}
-              className="rounded-md border border-slate-300 px-2 py-1 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+              className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm shadow-xs transition-colors duration-150 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none"
             >
               <option value="">—</option>
               {savedFilters.map((f) => (
@@ -400,7 +400,7 @@ export default function SearchPage() {
       )}
 
       <details
-        className="mt-3 rounded-xl border border-slate-200 bg-white"
+        className="mt-3 rounded-xl border border-slate-200 bg-white shadow-sm"
         onToggle={(e) => void openHistory((e.target as HTMLDetailsElement).open)}
       >
         <summary className="cursor-pointer px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
@@ -452,13 +452,13 @@ export default function SearchPage() {
       {loading && (
         <div
           role="status"
-          className="mt-4 rounded-xl border border-slate-200 bg-white p-4"
+          className="mt-4 rounded-xl border border-slate-200 bg-white shadow-sm p-4"
         >
           <p className="text-sm font-medium text-slate-700">Recherche en cours…</p>
-          <div className="mt-3 animate-pulse space-y-2">
-            <div className="h-3 w-2/3 rounded bg-slate-100" />
-            <div className="h-3 w-1/2 rounded bg-slate-100" />
-            <div className="h-3 w-3/5 rounded bg-slate-100" />
+          <div className="mt-3 space-y-2">
+            <div className="fbde-skeleton h-3.5 w-2/3 rounded" />
+            <div className="fbde-skeleton h-3.5 w-1/2 rounded" />
+            <div className="fbde-skeleton h-3.5 w-3/5 rounded" />
           </div>
         </div>
       )}
@@ -479,7 +479,7 @@ export default function SearchPage() {
       )}
 
       {page && facets && (facets.departments.length > 0 || facets.naf_divisions.length > 0) && (
-        <div className="mt-4 space-y-2 rounded-xl border border-slate-200 bg-white p-3">
+        <div className="mt-4 space-y-2 rounded-xl border border-slate-200 bg-white shadow-sm p-3">
           {(
             [
               ['Départements', 'department', facets.departments],
@@ -519,10 +519,10 @@ export default function SearchPage() {
       )}
 
       {page && (
-        <div className="mt-4 rounded-xl border border-slate-200 bg-white">
-          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-2">
-            <p className="text-sm text-slate-600">
-              Résultats — page de {page.data.length}
+        <div className="mt-4 rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-2.5">
+            <p className="text-sm font-medium text-slate-700">
+              <span className="font-mono tabular-nums">{page.data.length}</span> résultat{page.data.length > 1 ? 's' : ''} sur cette page
             </p>
             <div className="flex items-center gap-2">
               {exportJob && (
@@ -593,14 +593,12 @@ export default function SearchPage() {
                       {e.address.city ?? '—'}
                       {e.address.postal_code ? ` (${e.address.postal_code})` : ''}
                     </td>
-                    <td className="px-4 py-2 text-xs text-slate-500">
-                      {[
-                        e.contact.email && '✉',
-                        e.contact.phone && '☎',
-                        e.contact.website && '🌐',
-                      ]
-                        .filter(Boolean)
-                        .join(' ') || '—'}
+                    <td className="px-4 py-2">
+                      <ContactIcons
+                        email={Boolean(e.contact.email)}
+                        phone={Boolean(e.contact.phone)}
+                        website={Boolean(e.contact.website)}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -635,6 +633,33 @@ export default function SearchPage() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+/** Présence des canaux de contact : icône pleine si renseigné, estompée sinon. */
+function ContactIcons({ email, phone, website }: { email: boolean; phone: boolean; website: boolean }) {
+  const on = 'text-slate-600'
+  const off = 'text-slate-200'
+  return (
+    <div className="flex items-center gap-2">
+      <span title={email ? 'E-mail renseigné' : 'Pas d\'e-mail'} className={email ? on : off}>
+        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <path d="m3 7 9 6 9-6" />
+        </svg>
+      </span>
+      <span title={phone ? 'Téléphone renseigné' : 'Pas de téléphone'} className={phone ? on : off}>
+        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
+        </svg>
+      </span>
+      <span title={website ? 'Site web renseigné' : 'Pas de site web'} className={website ? on : off}>
+        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" />
+        </svg>
+      </span>
     </div>
   )
 }
