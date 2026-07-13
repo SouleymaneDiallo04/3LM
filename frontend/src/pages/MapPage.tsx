@@ -214,7 +214,7 @@ export default function MapPage() {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">Carte des entreprises</h1>
+          <h1 className="text-lg font-semibold tracking-tight text-slate-900">Carte des entreprises</h1>
           <p className="mt-1 text-sm text-slate-500">
             La carte charge ce qui est visible — zoomez pour passer des zones aux établissements.
           </p>
@@ -228,7 +228,7 @@ export default function MapPage() {
               value={filters.q ?? ''}
               onChange={(e) => set({ q: e.target.value || undefined })}
               placeholder="boulangerie…"
-              className="mt-1 block w-36 rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+              className="mt-1 block w-36 rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm shadow-xs transition-colors duration-150 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none"
             />
           </label>
           <label className="text-sm">
@@ -238,7 +238,7 @@ export default function MapPage() {
               value={filters.naf ?? ''}
               onChange={(e) => set({ naf: e.target.value || undefined })}
               placeholder="10.71C ou 45"
-              className="mt-1 block w-28 rounded-md border border-slate-300 px-2 py-1.5 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 focus:outline-none"
+              className="mt-1 block w-28 rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm shadow-xs transition-colors duration-150 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none"
             />
           </label>
           <label className="flex items-center gap-1.5 pb-2 text-sm text-slate-600">
@@ -318,7 +318,7 @@ export default function MapPage() {
         )}
       </div>
 
-      <div className="mt-3 h-[calc(100vh-16rem)] min-h-[420px] overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="mt-3 h-[calc(100vh-16rem)] min-h-[420px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <MapContainer
           center={initialCenter}
           zoom={initialZoom}
