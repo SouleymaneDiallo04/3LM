@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import CompanySummary from '../features/ai/CompanySummary'
 import PitchPanel from '../features/ai/PitchPanel'
+import SimilarProspectsPanel from '../features/ai/SimilarProspectsPanel'
 import { getEstablishment } from '../features/catalog/api'
 import type { Establishment } from '../lib/types'
 
@@ -175,6 +176,8 @@ export default function EstablishmentPage() {
         </section>
 
         <PitchPanel establishment={e} />
+
+        <SimilarProspectsPanel establishment={e} />
 
         <section className="rounded-xl border border-slate-200 bg-white p-4 md:col-span-2">
           <h2 className="text-sm font-semibold text-slate-900">Collecte des données</h2>
