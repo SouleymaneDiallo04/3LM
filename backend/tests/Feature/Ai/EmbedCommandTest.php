@@ -55,6 +55,11 @@ it('compte une panne d\'embedding comme erreur sans interrompre le batch (errors
             {
                 throw new RuntimeException('API down');
             }
+
+            public function embedMany(array $texts): array
+            {
+                throw new RuntimeException('API down');
+            }
         };
     });
 

@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Models\Establishment;
 use App\Models\Import;
 use App\Services\Ai\CompanyEmbedder;
-use App\Services\Ai\Exceptions\AiGenerationDenied;
 use Illuminate\Console\Command;
 use Throwable;
 
@@ -14,7 +13,8 @@ class EmbedCompaniesCommand extends Command
 {
     protected $signature = 'fbde:ai:embed
         {--department= : Limiter à un département}
-        {--limit=100 : Nombre maximal de fiches}';
+        {--limit=100 : Nombre maximal de fiches}
+        {--batch=100 : Fiches envoyées par appel API (le batching rend le backfill de masse tenable)}';
 
     protected $description = 'Génère les embeddings des établissements diffusibles non indexés';
 
@@ -24,24 +24,46 @@ class EmbedCompaniesCommand extends Command
         $stats = ['generated' => 0, 'skipped' => 0, 'errors' => 0];
 
         try {
-            Establishment::query()
-                ->where('status', 'active')
-                ->whereHas('company', fn ($q) => $q->where('is_diffusible', true))
-                ->whereNull('embedding')
-                ->when($this->option('department'), fn ($q, $d) => $q->where('department_code', $d))
-                ->with('company')
-                ->limit((int) $this->option('limit'))
-                ->get()
-                ->each(function (Establishment $e) use ($embedder, &$stats): void {
-                    try {
-                        $embedder->embed($e);
-                        $stats['generated']++;
-                    } catch (AiGenerationDenied) {
-                        $stats['skipped']++;
-                    } catch (Throwable) {
-                        $stats['errors']++;
-                    }
-                });
+            $limit = (int) $this->option('limit');
+            $batch = max(1, (int) $this->option('batch'));
+            $lastId = 0;
+            $processed = 0;
+
+            while ($processed < $limit) {
+                $chunk = Establishment::query()
+                    ->where('status', 'active')
+                    // is_diffusible est porté par l'unité légale (companies).
+                    ->whereHas('company', fn ($q) => $q->where('is_diffusible', true))
+                    ->whereNull('embedding')
+                    ->when($this->option('department'), fn ($q, $d) => $q->where('department_code', $d))
+                    // Curseur par id : le lot suivant avance même si le précédent a échoué
+                    // (sinon on rejouerait indéfiniment les mêmes fiches en erreur).
+                    ->where('id', '>', $lastId)
+                    ->orderBy('id')
+                    ->with('company')
+                    ->limit(min($batch, $limit - $processed))
+                    ->get();
+
+                if ($chunk->isEmpty()) {
+                    break;
+                }
+
+                $lastId = (int) $chunk->last()->id;
+                $processed += $chunk->count();
+
+                try {
+                    $result = $embedder->embedMany($chunk);
+                    $stats['generated'] += $result['generated'];
+                    $stats['skipped'] += $result['skipped'];
+                } catch (Throwable) {
+                    // Un lot perdu n'interrompt pas le backfill.
+                    $stats['errors'] += $chunk->count();
+                }
+
+                if ($processed % 5000 === 0) {
+                    $this->info("… {$processed} fiches traitées ({$stats['generated']} générées, {$stats['errors']} erreurs)");
+                }
+            }
 
             $this->table(['générés', 'ignorés', 'erreurs'], [[$stats['generated'], $stats['skipped'], $stats['errors']]]);
             $import->update(['status' => 'completed', 'finished_at' => now(), 'stats' => $stats]);

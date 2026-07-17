@@ -7,6 +7,11 @@ use App\Services\Ai\Contracts\EmbeddingClient;
 /** Doublure déterministe (tests/offline) : vecteur unitaire dérivé du texte. */
 class FakeEmbeddingClient implements EmbeddingClient
 {
+    public function embedMany(array $texts): array
+    {
+        return array_map(fn (string $t) => $this->embed($t), array_values($texts));
+    }
+
     public function embed(string $text): array
     {
         mt_srand(crc32($text));
