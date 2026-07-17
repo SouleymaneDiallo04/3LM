@@ -8,7 +8,7 @@ it('lie la doublure d\'embedding en environnement de test', function (): void {
 });
 
 it('embedde un lot de textes et rend un vecteur par texte, dans l\'ordre', function (): void {
-    $client = new FakeEmbeddingClient();
+    $client = new FakeEmbeddingClient;
     $vecs = $client->embedMany(['boulangerie', 'garage', 'boulangerie']);
 
     expect($vecs)->toHaveCount(3)
