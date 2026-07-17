@@ -60,8 +60,15 @@ class EmbedCompaniesCommand extends Command
                     $stats['errors'] += $chunk->count();
                 }
 
-                if ($processed % 5000 === 0) {
-                    $this->info("… {$processed} fiches traitées ({$stats['generated']} générées, {$stats['errors']} erreurs)");
+                // Les cycles de références de Guzzle (un client par appel) retiennent
+                // chaque réponse (~2 Mo/lot) ; le GC automatique ne se déclenche qu'à
+                // 10 000 racines — jamais atteint avant l'OOM avec si peu d'objets si
+                // volumineux. Collecte explicite par lot : mémoire bornée.
+                gc_collect_cycles();
+
+                if ($processed % 1000 === 0) {
+                    $mem = round(memory_get_usage(true) / 1048576);
+                    $this->info("… {$processed} fiches traitées ({$stats['generated']} générées, {$stats['errors']} erreurs, {$mem} Mo)");
                 }
             }
 
